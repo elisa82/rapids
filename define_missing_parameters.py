@@ -159,12 +159,12 @@ def define_missing_parameters(code, layers, fault, computational_param):
     import numpy as np
     import math
     import random
-    from pbs.conversions import find_rotated_coords, determine_utm_coord, create_point, create_point_utm
-    from pbs.conversions import determine_fault_coordinates_from_hypocentre, create_vertex, create_vertex_utm
-    from pbs.conversions import utm_to_lon_lat
+    from rapids.conversions import find_rotated_coords, determine_utm_coord, create_point, create_point_utm
+    from rapids.conversions import determine_fault_coordinates_from_hypocentre, create_vertex, create_vertex_utm
+    from rapids.conversions import utm_to_lon_lat
 
-    if layers['vel_model'] == 'NAC':
-        profile = np.loadtxt('/Users/elisa/Downloads/NAC_friuli/friuli_1D.xyz', skiprows=3)
+    if layers['vel_model'] == 'NAC_1D_Friuli':
+        profile = np.loadtxt('../DATA/VelModel/friuli_1D.xyz', skiprows=3)
         z = profile[:, 0]
         vp = profile[:, 1]
         vs = profile[:, 3]

@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 import sys
 import os
-from pbs.create_input_hisada import create_input_hisada_run
-from pbs.create_input_speed import create_input_speed_run
-from pbs.create_input_ucsb import create_input_ucsb_run
-from pbs.read_input_data import read_input_data
-from pbs.read_settings import read_settings
-from pbs.post_processing import post_processing
-from pbs.define_missing_parameters import define_missing_parameters
-from pbs.stitch_seismograms import stitch
-from pbs.conversions import speed2sac, speed2ascii
+from rapids.create_input_hisada import create_input_hisada_run
+from rapids.create_input_speed import create_input_speed_run
+from rapids.create_input_ucsb import create_input_ucsb_run
+from rapids.read_input_data import read_input_data
+from rapids.read_settings import read_settings
+from rapids.post_processing import post_processing
+from rapids.define_missing_parameters import define_missing_parameters
+from rapids.stitch_seismograms import stitch
+from rapids.conversions import speed2sac, speed2ascii
 
 #Di default SPEED è in spostamento e MS-DWS in accelerazione!!!
 #Tutto il resto in velocità!!!!
@@ -23,7 +23,7 @@ if __name__ == '__main__':
         calculation_mode = sys.argv[3]
     except IndexError:
         sys.exit('usage:\n'
-                 'python3 -m pbs #input_file [code] [mode]')
+                 'python3 -m rapids #input_file [code] [mode]')
 
     #read settings
     settings = read_settings('settings.ini')
@@ -49,7 +49,7 @@ if __name__ == '__main__':
                     create_input_ucsb_run(folder, layers, fault, computational_param, sites,
                                       path_code_ucsb, mode_ucsb, 0) #0 significa non calcolare le funzioni di Green
             create_input_speed_run(folder, layers, fault, computational_param, sites, settings['path_code_speed'],
-                                   topo, settings['path_topography'], settings['path_cubit'])
+                                   topo, settings['path_cubit'])
 
 
     if calculation_mode == '--run' or calculation_mode == '--run-nogreen':

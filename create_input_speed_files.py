@@ -3,7 +3,7 @@ from scipy.interpolate import RectBivariateSpline, bisplrep
 
 def redefine_layers(layers_orig, fault, computational_param):
     import numpy as np
-    from pbs.read_input_data import create_material_properties
+    from rapids.read_input_data import create_material_properties
 
     layers_new = create_material_properties()
 
@@ -1104,7 +1104,7 @@ def rename_curves(val):
     return num
 
 
-def create_mesh(folder, computational_param, layers, fault, sites, topo, path_topo, path_cubit):
+def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cubit):
     import math
     import os
     import sys
@@ -1117,7 +1117,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_to
     coord1, coord2, coord3, coord4 = define_area(fault, sites, computational_param)
 
     if topo == 1:
-        path_topo = str(path_topo)
+        path_topo = '../DATA/DEM'
         temp1, temp2, zone, letter = determine_utm_coord(fault['hypo']['lon'], fault['hypo']['lat'])
         coord1_lon, coord1_lat = utm_to_lon_lat(coord1[0], coord1[1], zone)
         coord2_lon, coord2_lat = utm_to_lon_lat(coord2[0], coord2[1], zone)
@@ -1134,12 +1134,12 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_to
                           + '/' + str(maxlat) + ' -I15s+e/15s+e > ' + topo_xyz_file
         os.system(command_extract)
         topo_utm_file = folder_mesh + '/ptopo.mean.utm'
-        command_cp = 'cp ' + path_topo + '/convert_lonlat2utm.pl' + ' ' + folder_mesh
+        command_cp = 'cp ' + 'topo_tools/convert_lonlat2utm.pl' + ' ' + folder_mesh
         os.system(command_cp)
         command_convert2utm = folder_mesh + '/convert_lonlat2utm.pl ' + topo_xyz_file + ' ' + str(zone) + ' > ' + \
                               topo_utm_file
         os.system(command_convert2utm)
-        command_cp = 'cp ' + path_topo + '/read_topo.py' + ' ' + folder_mesh
+        command_cp = 'cp ' + 'topo_tools/read_topo.py' + ' ' + folder_mesh
         os.system(command_cp)
         python_script_cubit = folder_mesh + '/read_topo.py'
         command_cp = 'cp ' + python_script_cubit + ' ' + folder_mesh

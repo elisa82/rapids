@@ -1,5 +1,5 @@
 def read_slip_xta(folder, fault, layers):
-    from pbs.plot import plot_slip_from_file
+    from rapids.plot import plot_slip_from_file
     import numpy as np
 
     values = np.loadtxt(fault['file_xta'])

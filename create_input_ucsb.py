@@ -1,12 +1,12 @@
 def create_input_ucsb_run(folder, layers, fault, computational_param, sites, path_code, mode_ucsb, green):
     import os
     import subprocess
-    from pbs.create_input_ucsb_files import create_input_ffsp
-    from pbs.create_input_ucsb_files import create_syn1D
-    from pbs.create_input_ucsb_files import create_model
-    from pbs.create_input_ucsb_files import create_Green
-    from pbs.create_input_ucsb_files import create_stations
-    from pbs.fault_slip import plot_slip
+    from rapids.create_input_ucsb_files import create_input_ffsp
+    from rapids.create_input_ucsb_files import create_syn1D
+    from rapids.create_input_ucsb_files import create_model
+    from rapids.create_input_ucsb_files import create_Green
+    from rapids.create_input_ucsb_files import create_stations
+    from rapids.fault_slip import plot_slip
 
     folder = folder + '/UCSB'
 

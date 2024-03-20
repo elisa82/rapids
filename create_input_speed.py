@@ -1,13 +1,13 @@
 def create_input_speed_run(folder, layers, fault, computational_param, sites, path_code, topo, path_topo, path_cubit):
     import os
-    from pbs.create_input_speed_files import create_input_mate
-    from pbs.create_input_speed_files import create_input_LS
-    from pbs.create_input_speed_files import create_input_speed_file
-    from pbs.create_input_speed_files import create_script_speed
-    from pbs.create_input_speed_files import create_input_extended
-    from pbs.create_input_speed_files import redefine_layers
-    from pbs.create_input_speed_files import create_mesh
-    from pbs.conversions import convert_mesh
+    from rapids.create_input_speed_files import create_input_mate
+    from rapids.create_input_speed_files import create_input_LS
+    from rapids.create_input_speed_files import create_input_speed_file
+    from rapids.create_input_speed_files import create_script_speed
+    from rapids.create_input_speed_files import create_input_extended
+    from rapids.create_input_speed_files import redefine_layers
+    from rapids.create_input_speed_files import create_mesh
+    from rapids.conversions import convert_mesh
 
     folder_ucsb = folder + '/UCSB'
     folder = folder + '/SPEED'
@@ -25,7 +25,7 @@ def create_input_speed_run(folder, layers, fault, computational_param, sites, pa
     create_input_mate(folder, computational_param, layers, fault)
 
     cubit_journal, file_exodus_mesh, file_exodus_topo = create_mesh(folder, computational_param, layers, fault, sites,
-                                                                    topo, path_topo, path_cubit)
+                                                                    topo, path_cubit)
     command_cubit_jou = path_cubit + ' -nographics python3 ' + cubit_journal
     os.system(command_cubit_jou)
 

@@ -241,7 +241,7 @@ def define_selected_time_history(selected_code, folder_simulation, nobs, desired
                                  isource):
     import numpy as np
     from obspy.core import read
-    from pbs.conversions import write_uscb_format
+    from rapids.conversions import write_uscb_format
 
     output_type = 'vel'
 

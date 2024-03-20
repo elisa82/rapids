@@ -1,7 +1,7 @@
 def grid_sites(fault, receiver_grid_step_km, receiver_maximum_dist):
     import math
     import numpy as np
-    from pbs.conversions import determine_utm_coord, utm_to_lon_lat
+    from rapids.conversions import determine_utm_coord, utm_to_lon_lat
 
     nstep_grid = math.floor(receiver_maximum_dist / receiver_grid_step_km) + 1
     receivers_lat = []
@@ -32,7 +32,7 @@ def grid_sites_4lengths(fault, receiver_grid_step_km, receiver_maximum_dist_N, r
                        receiver_maximum_dist_E, receiver_maximum_dist_W):
     import math
     import numpy as np
-    from pbs.conversions import determine_utm_coord, utm_to_lon_lat
+    from rapids.conversions import determine_utm_coord, utm_to_lon_lat
 
     nstep_grid_N = math.floor(receiver_maximum_dist_N / receiver_grid_step_km) + 1
     nstep_grid_S = math.floor(receiver_maximum_dist_S / receiver_grid_step_km) + 1
@@ -250,7 +250,7 @@ def read_input_data(fileini, code, calculation_mode):
     import sys
     import numpy as np
     from shapely.geometry import Point
-    from pbs.conversions import determine_utm_coord, create_point, create_vertex
+    from rapids.conversions import determine_utm_coord, create_point, create_vertex
     import math
 
     layers = create_material_properties()

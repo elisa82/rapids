@@ -1,6 +1,6 @@
 def create_input_grflt12s(folder, computational_param, layers, fault, sites):
 	import numpy as np
-	from pbs.conversions import read_slip_xta
+	from rapids.conversions import read_slip_xta
 
 
 	if fault['slip_mode'] == 'file_xta':
