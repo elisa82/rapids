@@ -68,7 +68,7 @@ if __name__ == '__main__':
                                       path_code_ucsb, mode_ucsb, 0) #0 significa non calcolare le funzioni di Green
                 create_input_speed_run(folder, layers, fault, computational_param, sites, settings['path_code_speed'],
                                    topo, settings['path_cubit'])
-                subprocess.call('sbatch run_speed_cineca.sh')
+                subprocess.call(['sbatch '+ folder + '/SPEED/run_speed_cineca.sh'])
             if calculation_mode == '--run' or calculation_mode == '--post':
                 speed2ascii(folder, sites)
                 post_processing(folder, plot_param, code, sites, fault, computational_param)
