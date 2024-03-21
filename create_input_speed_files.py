@@ -242,7 +242,7 @@ def define_param_sism_commands(ndiv, folder, fault):
     import numpy as np
     import sys
     from scipy.interpolate import griddata, interp2d
-    from pbs.conversions import find_rotated_coords
+    from rapids.conversions import find_rotated_coords
     import scipy
 
     # NB dictionaries inizializzati con max 10 segmenti!! da sistemare
@@ -622,7 +622,7 @@ def create_cartesian_vertex_fault(fault):
 
 def create_input_extended(folder, fault, layers, folder_ucsb):
     import numpy as np
-    from pbs.conversions import convert_ucsb_moment2slip, read_slip_xta
+    from rapids.conversions import convert_ucsb_moment2slip, read_slip_xta
 
     fid = open(folder + '/mech_prop.dat', 'w')
     fid.write('{}    {}\n'.format(len(layers['thk']), 1.0))
@@ -1108,7 +1108,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     import math
     import os
     import sys
-    from pbs.conversions import determine_utm_coord, utm_to_lon_lat
+    from rapids.conversions import determine_utm_coord, utm_to_lon_lat
 
     folder_mesh = folder + '/MESH'
     command_make_folder_MESH = 'mkdir -p ' + folder_mesh
