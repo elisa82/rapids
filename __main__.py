@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import os
+import subprocess
 from rapids.create_input_hisada import create_input_hisada_run
 from rapids.create_input_speed import create_input_speed_run
 from rapids.create_input_ucsb import create_input_ucsb_run
@@ -34,26 +35,12 @@ if __name__ == '__main__':
     fault, layers = define_missing_parameters(code, layers, fault, computational_param)
     print(fault)
 
-    if calculation_mode == '--input':
-        if code == 'hisada':
+    if code == 'hisada':
+        if calculation_mode == '--input':
             create_input_hisada_run(folder, layers, fault, computational_param, sites, settings['path_code_hisada'])
 
-        if code == 'speed':
-            if fault['slip_mode'] == 'Archuleta':
-                mode_ucsb = 'slip'
-                if fault['IDx'] == 'Yoffe':
-                    path_code_ucsb = settings['path_code_ucsb_Yoffe']
-                else:
-                    path_code_ucsb = settings['path_code_ucsb']
-                if not os.path.exists(folder + '/UCSB'):
-                    create_input_ucsb_run(folder, layers, fault, computational_param, sites,
-                                      path_code_ucsb, mode_ucsb, 0) #0 significa non calcolare le funzioni di Green
-            create_input_speed_run(folder, layers, fault, computational_param, sites, settings['path_code_speed'],
-                                   topo, settings['path_cubit'])
-
-
-    if calculation_mode == '--run' or calculation_mode == '--run-nogreen':
-        if code == 'ucsb':
+    if code == 'ucsb':
+        if calculation_mode == '--run' or calculation_mode == '--run-nogreen':
             mode_ucsb = 'full'
             if fault['IDx'] == 'Yoffe':
                 path_code_ucsb = settings['path_code_ucsb_Yoffe']
@@ -65,9 +52,26 @@ if __name__ == '__main__':
                 green = 0
             create_input_ucsb_run(folder, layers, fault, computational_param, sites, path_code_ucsb,
                                   mode_ucsb, green)
-
+            subprocess.call('sbatch run_speed_cineca.sh')
             post_processing(folder, plot_param, code, sites, fault, computational_param)
 
+    if code == 'speed':
+            if calculation_mode == '--input' or calculation_mode == '--run':
+                if fault['slip_mode'] == 'Archuleta':
+                    mode_ucsb = 'slip'
+                    if fault['IDx'] == 'Yoffe':
+                        path_code_ucsb = settings['path_code_ucsb_Yoffe']
+                    else:
+                        path_code_ucsb = settings['path_code_ucsb']
+                    if not os.path.exists(folder + '/UCSB'):
+                        create_input_ucsb_run(folder, layers, fault, computational_param, sites,
+                                      path_code_ucsb, mode_ucsb, 0) #0 significa non calcolare le funzioni di Green
+                create_input_speed_run(folder, layers, fault, computational_param, sites, settings['path_code_speed'],
+                                   topo, settings['path_cubit'])
+                subprocess.call('sbatch run_speed_cineca.sh')
+            if calculation_mode == '--run' or calculation_mode == '--post':
+                speed2ascii(folder, sites)
+                post_processing(folder, plot_param, code, sites, fault, computational_param)
 
 
     with open(folder + '/sites.obs', 'w') as f:
@@ -75,10 +79,7 @@ if __name__ == '__main__':
         for line in range(len(sites['lon'])):
                 f.write("%10.4f %10.4f\n" % (sites['lon'][line], sites['lat'][line]))
 
-    if calculation_mode == '--post':
-        if 'speed' in code:
-            speed2ascii(folder, sites)
-        post_processing(folder, plot_param, code, sites, fault, computational_param)
+
 
     if calculation_mode == '--stitch':
 
