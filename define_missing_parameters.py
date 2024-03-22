@@ -32,8 +32,6 @@ def compute_vs_average_on_fault(fault, layers):
     for k in range(nsubxy):
         vs_average = vs_average + beta[k]
     vs_average = vs_average / float(nsubxy)
-    print(vs_average)
-
     return vs_average
 
 
@@ -174,6 +172,10 @@ def define_missing_parameters(code, layers, fault, computational_param):
         rho_grouped = []
         thk_grouped = []
         next_line = 0
+        for i in range(len(rho)):
+            if not np.isnan(vp[i]):
+                layers['depth_top_layer'] = z[i]
+                break
         for i in range(len(rho)):
             if not np.isnan(vp[i]):
                 if i == next_line:

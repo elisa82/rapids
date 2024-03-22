@@ -1,6 +1,7 @@
 from scipy.interpolate import RectBivariateSpline, bisplrep
 
 
+
 def redefine_layers(layers_orig, fault, computational_param):
     import numpy as np
     from rapids.read_input_data import create_material_properties
@@ -40,6 +41,7 @@ def redefine_layers(layers_orig, fault, computational_param):
     layers_new['qp'] = np.asarray(qp_newlayers)
     layers_new['qs'] = np.asarray(qs_newlayers)
     layers_new['rho'] = np.asarray(rho_newlayers)
+    layers_new['depth_top_layer'] = layers_orig['depth_top_layer']
 
     return layers_new
 
@@ -1180,9 +1182,9 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
         fid.write('{}\n'.format(''))
         fid.write('{}\n'.format('create surface parallelogram vertex 1 2 3'))
     else:
-        fid.write('{} {} {} {}\n'.format('create vertex', coord1[0], coord1[1], -layers['thk'][0] * 1000))
-        fid.write('{} {} {} {}\n'.format('create vertex', coord2[0], coord2[1], -layers['thk'][0] * 1000))
-        fid.write('{} {} {} {}\n'.format('create vertex', coord3[0], coord3[1], -layers['thk'][0] * 1000))
+        fid.write('{} {} {} {}\n'.format('create vertex', coord1[0], coord1[1], (-layers['depth_top_layer']-layers['thk'][0]) * 1000))
+        fid.write('{} {} {} {}\n'.format('create vertex', coord2[0], coord2[1], (-layers['depth_top_layer']-layers['thk'][0]) * 1000))
+        fid.write('{} {} {} {}\n'.format('create vertex', coord3[0], coord3[1], (-layers['depth_top_layer']-layers['thk'][0]) * 1000))
         fid.write('{}\n'.format(''))
         fid.write('{}\n'.format('create surface parallelogram vertex 5 6 7'))
         fid.write('{}\n'.format(''))
@@ -1206,9 +1208,9 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     fid.write('{}\n'.format(''))
     nlayers = len(layers['rho'])
     if topo == 0:
-        fid.write('{} {}\n'.format('surface 1 copy move x 0 y 0 z', -layers['thk'][
-            0] * 1000))  # create first layer alone for consistency with topo procedure
-    depth_layers = layers['thk'][0]
+        fid.write('{} {}\n'.format('surface 1 copy move x 0 y 0 z', (-layers['depth_top_layer']-layers['thk'][
+            0]) * 1000))  # create first layer alone for consistency with topo procedure
+    depth_layers = layers['thk'][0] + layers['depth_top_layer']
     for i in range(1, nlayers):
         depth_layers = depth_layers + layers['thk'][i]
         fid.write('{} {}\n'.format('surface 2 copy move x 0 y 0 z', -depth_layers * 1000))

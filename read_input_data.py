@@ -221,6 +221,7 @@ def create_material_properties():
     fqp = None
     fqs = None
     vel_model = None
+    depth_top_layer = 0
     layers = {
         "vp": vp,
         "vs": vs,
@@ -230,7 +231,8 @@ def create_material_properties():
         "fqs": fqs,
         "rho": rho,
         "thk": thk,
-        "vel_model": vel_model
+        "vel_model": vel_model,
+        "depth_top_layer": depth_top_layer
     }
     return layers
 
