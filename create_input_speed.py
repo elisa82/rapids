@@ -1,4 +1,4 @@
-def create_input_speed_run(folder, layers, fault, computational_param, sites, path_code, topo, path_cubit):
+def create_input_speed_run(folder, layers, fault, computational_param, sites, path_code, topo, path_cubit, cineca):
     import os
     from rapids.create_input_speed_files import create_input_mate
     from rapids.create_input_speed_files import create_input_LS
@@ -47,5 +47,5 @@ def create_input_speed_run(folder, layers, fault, computational_param, sites, pa
     file_mesh_final = FilePathMesh.split('/')[len(FilePathMesh.split('/'))-1]
     create_input_speed_file(folder, computational_param, file_mesh_final)
 
-    create_script_speed(folder, path_code, sites)
+    create_script_speed(folder, path_code, sites, cineca)
     return

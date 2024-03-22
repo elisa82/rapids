@@ -30,7 +30,7 @@ if __name__ == '__main__':
     settings = read_settings('settings.ini')
 
     # read input file
-    [layers, fault, computational_param, sites, plot_param, topo, folder] = \
+    [layers, fault, computational_param, sites, plot_param, topo, folder, cineca] = \
         read_input_data(fileini, code, calculation_mode)
     fault, layers = define_missing_parameters(code, layers, fault, computational_param)
     print(fault)
@@ -52,11 +52,10 @@ if __name__ == '__main__':
                 green = 0
             create_input_ucsb_run(folder, layers, fault, computational_param, sites, path_code_ucsb,
                                   mode_ucsb, green)
-            subprocess.call('sbatch run_speed_cineca.sh')
             post_processing(folder, plot_param, code, sites, fault, computational_param)
 
     if code == 'speed':
-            if calculation_mode == '--input' or calculation_mode == '--run':
+            if calculation_mode == '--input':
                 if fault['slip_mode'] == 'Archuleta':
                     mode_ucsb = 'slip'
                     if fault['IDx'] == 'Yoffe':
@@ -67,9 +66,8 @@ if __name__ == '__main__':
                         create_input_ucsb_run(folder, layers, fault, computational_param, sites,
                                       path_code_ucsb, mode_ucsb, 0) #0 significa non calcolare le funzioni di Green
                 create_input_speed_run(folder, layers, fault, computational_param, sites, settings['path_code_speed'],
-                                   topo, settings['path_cubit'])
-                subprocess.call(['sbatch '+ folder + '/SPEED/run_speed_cineca.sh'])
-            if calculation_mode == '--run' or calculation_mode == '--post':
+                                   topo, settings['path_cubit'], cineca)
+            if calculation_mode == '--post':
                 speed2ascii(folder, sites)
                 post_processing(folder, plot_param, code, sites, fault, computational_param)
 

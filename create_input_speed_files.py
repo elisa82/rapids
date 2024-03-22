@@ -1117,7 +1117,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     coord1, coord2, coord3, coord4 = define_area(fault, sites, computational_param)
 
     if topo == 1:
-        path_topo = '../DATA/DEM'
+        path_topo = '$HOME/rapids/DATA/DEM'
         temp1, temp2, zone, letter = determine_utm_coord(fault['hypo']['lon'], fault['hypo']['lat'])
         coord1_lon, coord1_lat = utm_to_lon_lat(coord1[0], coord1[1], zone)
         coord2_lon, coord2_lat = utm_to_lon_lat(coord2[0], coord2[1], zone)
@@ -1128,18 +1128,19 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
         maxlon = max(coord1_lon, coord2_lon, coord3_lon, coord4_lon) + buffer
         minlat = min(coord1_lat, coord2_lat, coord3_lat, coord4_lat) - buffer
         maxlat = max(coord1_lat, coord2_lat, coord3_lat, coord4_lat) + buffer
-        topo_xyz_file = path_topo + '/ptopo.mean.xyz'
+        topo_xyz_file = folder_mesh + '/ptopo.mean.xyz'
         command_extract = 'gmt blockmean ' + path_topo + '/bedrock.xyz -R' + str(minlon) + '/' + str(
             maxlon) + '/' + str(minlat) \
                           + '/' + str(maxlat) + ' -I15s+e/15s+e > ' + topo_xyz_file
+        print(command_extract)
         os.system(command_extract)
         topo_utm_file = folder_mesh + '/ptopo.mean.utm'
-        command_cp = 'cp ' + 'topo_tools/convert_lonlat2utm.pl' + ' ' + folder_mesh
+        command_cp = 'cp ' + '$HOME/rapids/topo_tools/convert_lonlat2utm.pl' + ' ' + folder_mesh
         os.system(command_cp)
         command_convert2utm = folder_mesh + '/convert_lonlat2utm.pl ' + topo_xyz_file + ' ' + str(zone) + ' > ' + \
                               topo_utm_file
         os.system(command_convert2utm)
-        command_cp = 'cp ' + 'topo_tools/read_topo.py' + ' ' + folder_mesh
+        command_cp = 'cp ' + '$HOME/rapids/topo_tools/read_topo.py' + ' ' + folder_mesh
         os.system(command_cp)
         python_script_cubit = folder_mesh + '/read_topo.py'
         command_cp = 'cp ' + python_script_cubit + ' ' + folder_mesh
@@ -1515,30 +1516,28 @@ def create_input_speed_file(folder, computational_param, meshfile):
     return
 
 
-def create_script_speed(folder, path_code_speed, sites):
+def create_script_speed(folder, path_code_speed, sites, cineca):
     import numpy as np
 
-    nnodes = 20
-    nproc = nnodes * 48
-    memory = 300
+    nproc = cineca['nnodes'] * cineca['ntask_per_node']
 
     nobs = len(sites['Z'])
-    fid = open(folder + '/run_speed_cineca.sh', 'w')
+    fid = open(folder + '/run_speed_cineca.slurm', 'w')
     fid.write('{}\n'.format('#!/bin/bash'))
-    fid.write('{} {}\n'.format('#SBATCH --nodes=', nnodes))
+    fid.write('{}{}\n'.format('#SBATCH --nodes=', cineca['nnodes']))
     fid.write('{}\n'.format('#un nodo ha 48 processori'))
-    fid.write('{}\n'.format('#SBATCH --ntasks-per-node=48'))
+    fid.write('{}{}\n'.format('#SBATCH --ntasks-per-node=',cineca['ntask_per_node']))
     fid.write('{}\n'.format('##SBATCH --cpus-per-task=1'))
     fid.write('{}\n'.format(''))
-    fid.write('{} {} {}\n'.format('#SBATCH --mem=', memory, 'GB'))
-    fid.write('{}\n'.format('#SBATCH --time=2:00:00'))
+    fid.write('{}{}{}\n'.format('#SBATCH --mem=', cineca['memory'], 'GB'))
+    fid.write('{}{}\n'.format('#SBATCH --time=', cineca['duration']))
     # fid.write('{}\n'.format('#SBATCH --account=OGS23_PRACE_IT'))
-    fid.write('{}\n'.format('#SBATCH --account=IscrC_URASS-2'))
-    fid.write('{}\n'.format('#SBATCH --job-name=Friuli'))
+    fid.write('{}{}\n'.format('#SBATCH --account=',cineca['account']))
+    fid.write('{}\n'.format('#SBATCH --job-name=',cineca['job_name']))
     fid.write('{}\n'.format(''))
     # fid.write('{}\n'.format('#SBATCH --qos=g100_qos_dbg'))
     fid.write('{}\n'.format(''))
-    fid.write('{}\n'.format('#SBATCH --partition=g100_usr_prod'))
+    fid.write('{}{}\n'.format('#SBATCH --partition=', cineca['partition']))
     fid.write('{}\n'.format(''))
     fid.write('{}\n'.format('mkdir -p MONITOR'))
     fid.write('{}\n'.format('mkdir -p FILES_MPI'))
@@ -1552,8 +1551,7 @@ def create_script_speed(folder, path_code_speed, sites):
     fid.write('{}\n'.format(''))
     fid.write('{}\n'.format('export OMP_NUM_THREADS=1'))
     fid.write('{}\n'.format('date'))
-    fid.write('{} {} {}\n'.format('mpirun -np ', nproc,
-                                  ' /g100/home/userexternal/ezuccolo/SPEED/SPEED > speed.out'))
+    fid.write('{} {} {} {}\n'.format('mpirun -np ', nproc, path_code_speed, ' > speed.out'))
     fid.write('{}\n'.format('date'))
     fid.close()
 

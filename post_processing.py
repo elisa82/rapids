@@ -61,7 +61,7 @@ def create_figure_3plots(peak_all, fault, sites, label_map, desired_output, plot
 
     plt.figure()
     plt.figure(figsize=(10, 10))
-    plt.rcParams['font.family'] = "Times New Roman"
+    #plt.rcParams['font.family'] = "Times New Roman"
     plt.rcParams['font.size'] = '10'
     plt.rcParams['mathtext.fontset'] = "stix"
     plt.rcParams['legend.title_fontsize'] = '16'
