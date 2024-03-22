@@ -1,0 +1,40 @@
+isoflag=5 Depth=14
+Station Information
+Station(0): ../data/ACOM_f0.05.data  R=201.0km  AZI=332.8  W=1.406  Zcor=12
+Station(1): ../data/AQU_f0.05.data  R=307.0km  AZI=200.5  W=2.147  Zcor=27
+Station(2): ../data/BLY_f0.05.data  R=197.0km  AZI=95.7  W=1.378  Zcor=13
+Station(3): ../data/CTI_f0.05.data  R=269.0km  AZI=298.1  W=1.881  Zcor=21
+Station(4): ../data/SABO_f0.05.data  R=143.0km  AZI=324.3  W=1.000  Zcor=5
+Station(5): ../data/SOKA_f0.05.data  R=194.0km  AZI=7.3  W=1.357  Zcor=9
+Station(6): ../data/VARN_f0.05.data  R=234.0km  AZI=300.5  W=1.636  Zcor=17
+isomoment=0
+MT Aki Convention
+Mxx=-845.098
+Mxy=-557.555
+Mxz=220.519
+Myy=573.163
+Myz=-2.186
+Mzz=271.935
+eigen1=2.92721e+22
+eigen2=7.77525e+22
+eigen3=-1.07025e+23
+Mo=9.23885e+19
+MoFull=1.07025e+23
+Mw=4.3
+Strike= 244 ;  334
+Rake= -12 ; -180
+Dip=  90 ;   78
+Pdc=45
+Pclvd=55
+Piso=0
+Station(0) VR=88.760384  VAR=9.42141e-06
+Station(1) VR=39.640987  VAR=2.6114e-06
+Station(2) VR=67.739433  VAR=1.67497e-06
+Station(3) VR=42.186813  VAR=4.5261e-07
+Station(4) VR=90.064110  VAR=1.1782e-05
+Station(5) VR=-3.088439  VAR=4.01022e-06
+Station(6) VR=69.394386  VAR=1.00952e-06
+Variance=3.600e-09
+VarRed=6.724e+01
+Var/Pdc=7.948e-11
+Quality=3
