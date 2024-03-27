@@ -980,7 +980,8 @@ def find_repeat_interval(filename):
 
 
 def create_read_topo_py(python_script_cubit, topo_utm_file, interval, folder_mesh):
-    # file_stl = folder_mesh + '/topo.stl'
+    print(topo_utm_file)
+    # file_stl = '/topo.stl'
     file_cub = folder_mesh + '/topo.cub'
     lines = [
         "#!/usr/bin/env python\n",
@@ -1142,16 +1143,12 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
         command_convert2utm = folder_mesh + '/convert_lonlat2utm.pl ' + topo_xyz_file + ' ' + str(zone) + ' > ' + \
                               topo_utm_file
         os.system(command_convert2utm)
-        command_cp = 'cp ' + '$HOME/rapids/topo_tools/read_topo.py' + ' ' + folder_mesh
-        os.system(command_cp)
-        python_script_cubit = folder_mesh + '/read_topo.py'
-        command_cp = 'cp ' + python_script_cubit + ' ' + folder_mesh
-        os.system(command_cp)
         result_find_repeat_line = find_repeat_interval(topo_xyz_file)
         if result_find_repeat_line is not None:
             interval = result_find_repeat_line
         else:
             sys.exit("Error: No repeating x coordinates found in " + topo_xyz_file)
+        python_script_cubit = folder_mesh + '/read_topo.py'
         create_read_topo_py(python_script_cubit, topo_utm_file, interval, folder_mesh)
         command_cubit = path_cubit + ' -nographics python3 ' + python_script_cubit
         os.system(command_cubit)

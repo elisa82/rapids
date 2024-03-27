@@ -253,9 +253,10 @@ def define_missing_parameters(code, layers, fault, computational_param):
 
 
     if fault['Mo'] is None and fault['Mw'] is not None:
-        fault['Mo'] = 10. ** (1.5 * fault['Mw'] + 9.05)  # in Nm Hanks & Kanamori (1979)
+        fault['Mo'] = 10. ** (1.5 * (fault['Mw']) + 9.05)  # in Nm Hanks & Kanamori (1979)
+
     elif fault['Mo'] is not None and fault['Mw'] is None:
-        fault['Mw'] = 2 / 3 * (math.log10(fault['Mo']) - 9.05) # in Nm Hanks & Kanamori (1979)
+        fault['Mw'] = 2 / 3 * math.log10(fault['Mo']*10**7) - 10.7 # Hanamori
     else:
         sys.exit('Error: Mo/Mw not found')
 
@@ -281,19 +282,8 @@ def define_missing_parameters(code, layers, fault, computational_param):
         slip = compute_slip_point_source(layers, fault)
         fault['slip'] = slip
 
-    if fault['fault_type'] == 'extended':
-        if fault['length'] is None:
-            areaWC94, lengthWC94 = WC1994(fault['rake'], fault['Mw'])
-            if fault['width'] is not None:
-                fault['length'] = areaWC94 / fault['width']
-            else:
-                fault['length'] = lengthWC94
-        if fault['width'] is None:
-            areaWC94, lengthWC94 = WC1994(fault['rake'], fault['Mw'])
-            fault['width'] = areaWC94 / fault['length']
 
-
-    if fault['fault_geolocation'] == 'from_hypo' or fault['fault_type'] == 'point':
+    if fault['fault_type'] == 'point':
 
         if fault['Ztor'] is None:
             fault['Ztor'] = fault['hypo']['Z'] - fault['hypo_down_dip'] * fault['width'] * np.sin(np.radians(fault['dip']))
@@ -313,18 +303,56 @@ def define_missing_parameters(code, layers, fault, computational_param):
         vertex = create_vertex(pbl, pbr, ptl, ptr)
         fault['vertex'] = vertex
 
+    print(fault['fault_type'])
 
-    if ('speed' in code and fault['fault_type'] == 'extended') or 'ucsb' in code:
-        pbl_utm_X, pbl_utm_Y, zone, letter = determine_utm_coord(fault['vertex']['pbl']['lon'], fault['vertex']['pbl']['lat'])
-        pbr_utm_X, pbr_utm_Y, zone, letter = determine_utm_coord(fault['vertex']['pbr']['lon'], fault['vertex']['pbr']['lat'])
-        ptl_utm_X, ptl_utm_Y, zone, letter = determine_utm_coord(fault['vertex']['ptl']['lon'], fault['vertex']['ptl']['lat'])
-        ptr_utm_X, ptr_utm_Y, zone, letter = determine_utm_coord(fault['vertex']['ptr']['lon'], fault['vertex']['ptr']['lat'])
-        pbl_utm = create_point_utm(pbl_utm_X, pbl_utm_Y, fault['vertex']['pbl']['Z'] * 1000)
-        pbr_utm = create_point_utm(pbr_utm_X, pbr_utm_Y, fault['vertex']['pbr']['Z'] * 1000)
-        ptl_utm = create_point_utm(ptl_utm_X, ptl_utm_Y, fault['vertex']['ptl']['Z'] * 1000)
-        ptr_utm = create_point_utm(ptr_utm_X, ptr_utm_Y, fault['vertex']['ptr']['Z'] * 1000)
-        vertex_utm = create_vertex_utm(pbl_utm, pbr_utm, ptl_utm, ptr_utm)
-        fault['vertex_utm'] = vertex_utm
+    if fault['fault_type'] == 'extended':
+
+        if fault['fault_geolocation'] == 'from_hypo':
+    
+            if fault['length'] is None:
+                areaWC94, lengthWC94 = WC1994(fault['rake'], fault['Mw'])
+                if fault['width'] is not None:
+                    fault['length'] = areaWC94 / fault['width']
+                else:
+                    fault['length'] = lengthWC94
+            if fault['width'] is None:
+                areaWC94, lengthWC94 = WC1994(fault['rake'], fault['Mw'])
+                fault['width'] = areaWC94 / fault['length']
+
+            if fault['hypo_along_strike'] is None:
+                fault['hypo_along_strike'] = hypo_strike_Causse_2008()
+
+            if fault['Ztor'] is None:
+                if fault['hypo_down_dip'] is None:
+                    fault['hypo_down_dip'] = hypo_dip_Causse_2008(fault['rake'])
+                fault['Ztor'] = fault['hypo']['Z'] - fault['hypo_down_dip'] * fault['width'] * np.sin(np.radians(fault['dip']))
+                if fault['Ztor'] < 0:
+                    fault['Ztor'] = 0.
+                if fault['Ztor'] < fault['min_fault_depth']:
+                    fault['Ztor'] = fault['min_fault_depth']
+            else:
+                fault['hypo_down_dip'] = (fault['hypo']['Z'] - fault['Ztor'])/(fault['width'] * np.sin(np.radians(fault['dip'])))
+
+            fault['max_fault_depth'] = fault['Ztor'] + fault['width'] * np.sin(np.radians(fault['dip']))
+            hypo_x, hypo_y, zone, letter = determine_utm_coord(fault['hypo']['lon'], fault['hypo']['lat'])
+            hypo_utm = create_point_utm(hypo_y, hypo_x, fault['hypo']['Z'] * 1000)  # in m
+            fault['hypo_utm'] = hypo_utm
+
+            pbl, pbr, ptl, ptr = determine_fault_coordinates_from_hypocentre(fault)
+            vertex = create_vertex(pbl, pbr, ptl, ptr)
+            fault['vertex'] = vertex
+
+            pbl_utm_X, pbl_utm_Y, zone, letter = determine_utm_coord(fault['vertex']['pbl']['lon'], fault['vertex']['pbl']['lat'])
+            pbr_utm_X, pbr_utm_Y, zone, letter = determine_utm_coord(fault['vertex']['pbr']['lon'], fault['vertex']['pbr']['lat'])
+            ptl_utm_X, ptl_utm_Y, zone, letter = determine_utm_coord(fault['vertex']['ptl']['lon'], fault['vertex']['ptl']['lat'])
+            ptr_utm_X, ptr_utm_Y, zone, letter = determine_utm_coord(fault['vertex']['ptr']['lon'], fault['vertex']['ptr']['lat'])
+            pbl_utm = create_point_utm(pbl_utm_X, pbl_utm_Y, fault['vertex']['pbl']['Z'] * 1000)
+            pbr_utm = create_point_utm(pbr_utm_X, pbr_utm_Y, fault['vertex']['pbr']['Z'] * 1000)
+            ptl_utm = create_point_utm(ptl_utm_X, ptl_utm_Y, fault['vertex']['ptl']['Z'] * 1000)
+            ptr_utm = create_point_utm(ptr_utm_X, ptr_utm_Y, fault['vertex']['ptr']['Z'] * 1000)
+            vertex_utm = create_vertex_utm(pbl_utm, pbr_utm, ptl_utm, ptr_utm)
+            fault['vertex_utm'] = vertex_utm
+
 
         if fault['fault_geolocation'] == 'from_hypo_geometry':
             hypo_x, hypo_y, zone, letter = determine_utm_coord(fault['hypo']['lon'], fault['hypo']['lat'])
@@ -341,8 +369,12 @@ def define_missing_parameters(code, layers, fault, computational_param):
             fault['hypo_along_strike'] = a*cos_angle_B / c
 
         if fault['fault_geolocation'] == 'from_geometry':
+            if fault['hypo_down_dip'] is None:
+                fault['hypo_down_dip'] = hypo_dip_Causse_2008(fault['rake'])
             depth_hypo = fault['Ztor'] + \
                          fault['hypo_down_dip'] * fault['width'] * np.sin(np.radians(fault['dip']))
+            if fault['hypo_along_strike'] is None:
+                fault['hypo_along_strike'] = hypo_strike_Causse_2008()
             Hypo_strike = fault['hypo_along_strike'] * fault['length'] * 1000
             Hypo_dip = fault['hypo_down_dip'] * fault['width'] * 1000
             # i - sono per la convenzione di SPEED
@@ -358,7 +390,6 @@ def define_missing_parameters(code, layers, fault, computational_param):
             hypo = create_point(lon_hypo, lat_hypo, depth_hypo)  # in degrees and depth in km
             fault['hypo'] = hypo
 
-    if fault['fault_type'] == 'extended':
 
         if fault['rupture_velocity'] is None:
             vs_average = compute_vs_average_on_fault(fault, layers)
@@ -372,17 +403,13 @@ def define_missing_parameters(code, layers, fault, computational_param):
                 # rupture velocity values reported in source studies mainly range between 0.65Vs and 0.85Vs [e.g.,
                 # Heaton, 1990].
 
+        print(fault['rupture_velocity'])
+
         if fault['slip_mode'] == 'constant':
             # TODO con Wells and Coppersmith e vedere anche cosa fare con dimensioni sottosorgenti e SPEED
             print('TO DO')
 
-        if 'ucsb' in code or fault['slip_mode'] == 'Archuleta':
-
-            if fault['hypo_along_strike'] is None:
-                fault['hypo_along_strike'] = hypo_strike_Causse_2008()
-
-            if fault['hypo_down_dip'] is None:
-                fault['hypo_down_dip'] = hypo_dip_Causse_2008(fault['rake'])
+        elif fault['slip_mode'] == 'Archuleta':
 
             if fault['subfault_length'] is None and fault['number_subfaults_strike'] is None:
                 fault['subfault_length'] = fault['rupture_velocity']/computational_param['fmax_ucsb']
@@ -415,6 +442,14 @@ def define_missing_parameters(code, layers, fault, computational_param):
     if fault['IDx'] is None:
         fault['IDx'] = 'Archuleta'
 
+    #Compute rupture_duration
+    ydlnuc = fault['hypo_down_dip'] - 0.5
+    xdlnuc = fault['hypo_along_strike'] - 0.5
+    # ovvero la distanza massima
+    Distrup = np.sqrt(((0.5 + np.abs(xdlnuc)) * fault['length']) ** 2 +
+                              ((0.5 + np.abs(ydlnuc)) * fault['width']) ** 2)
+    fault['rupture_duration'] = Distrup/fault['rupture_velocity']
+
     if fault['rise_time'] is None:
         if fault['fault_type'] == 'point':
             fault['rise_time'] = 10 ** (0.5 * fault['Mw'] - 3.34)  # Somerville et al. (1999)
@@ -425,13 +460,7 @@ def define_missing_parameters(code, layers, fault, computational_param):
         else:
             #Uso la notazione e formule del pulsyn
             C_heaton = 0.125 #è un parametro di ingresso (la larghezza della striscia che sta nucleando in termini di frazione di Distrup)
-            ydlnuc = fault['hypo_down_dip'] - 0.5
-            xdlnuc = fault['hypo_along_strike'] - 0.5
-            Distrup = np.sqrt(((0.5 + np.abs(xdlnuc)) * fault['length']) ** 2 +
-                              ((0.5 + np.abs(ydlnuc)) * fault['width']) ** 2)
-            # ovvero la distanza massima
-            Wslip = C_heaton * Distrup       #slipping strip width
-            fault['rise_time'] = Wslip / fault['rupture_velocity']    #local slip / rise / HF radiation time:  we believe that ideally m1 - rise = Trise / 2
+            fault['rise_time'] = C_heaton * fault['rupture_duration']    #local slip / rise / HF radiation time:  we believe that ideally m1 - rise = Trise / 2
 
     if fault['fc'] is None and fault['stress_drop'] is not None:
         # fc da Allmann e Shearer 2009

@@ -3,7 +3,7 @@ def plot_slip(folder, fault, is_moment):
     import matplotlib.pyplot as plt
     import matplotlib
 
-    plt.rcParams['font.family'] = 'Times New Roman'
+    #plt.rcParams['font.family'] = 'Times New Roman'
     plt.rcParams['font.size'] = 16
     matplotlib.rcParams['xtick.direction'] = 'out'
     matplotlib.rcParams['ytick.direction'] = 'out'

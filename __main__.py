@@ -63,6 +63,7 @@ if __name__ == '__main__':
                     else:
                         path_code_ucsb = settings['path_code_ucsb']
                     if not os.path.exists(folder + '/UCSB'):
+                        print(fault['width'], fault['length'])
                         create_input_ucsb_run(folder, layers, fault, computational_param, sites,
                                       path_code_ucsb, mode_ucsb, 0) #0 significa non calcolare le funzioni di Green
                 create_input_speed_run(folder, layers, fault, computational_param, sites, settings['path_code_speed'],
