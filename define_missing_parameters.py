@@ -35,7 +35,7 @@ def compute_vs_average_on_fault(fault, layers):
     return vs_average
 
 
-def WC1994(rake, mag):
+def WC1994_dimensions(rake, mag):
     # Wells and Coppersmith 1994
     if -45 <= rake <= 45 or rake >= 135 or rake <= -135:
         # strike slip
@@ -260,15 +260,15 @@ def define_missing_parameters(code, layers, fault, computational_param):
     else:
         sys.exit('Error: Mo/Mw not found')
 
-    if code == 'ucsb' or fault['slip_mode'] == 'Archuleta':
-        if fault['Mw'] < 6.0:
-            sys.exit('Error: UCSB method works well with earthquakes with M >6:0. '
-                     'When the source is small, for example, M 5.5 or less, '
-                     'there are not enough subfaults in our method to establish the correlation structure '
-                     'between source parameters. Moreover, the initial distribution for each of the '
-                     'kinematic parameters was based on much larger simulated earthquakes. '
-                     'It may be that small events have a narrower distribution of source parameters '
-                     'for each subfault.')
+    #if code == 'ucsb' or fault['slip_mode'] == 'Archuleta':
+    #    if fault['Mw'] < 6.0:
+    #        sys.exit('Error: UCSB method works well with earthquakes with M >6:0. '
+    #                 'When the source is small, for example, M 5.5 or less, '
+    #                 'there are not enough subfaults in our method to establish the correlation structure '
+    #                 'between source parameters. Moreover, the initial distribution for each of the '
+    #                 'kinematic parameters was based on much larger simulated earthquakes. '
+    #                 'It may be that small events have a narrower distribution of source parameters '
+    #                 'for each subfault.')
 
     if fault['fault_type'] == 'point':
         fault['number_subfaults_strike'] = 1
@@ -310,13 +310,13 @@ def define_missing_parameters(code, layers, fault, computational_param):
         if fault['fault_geolocation'] == 'from_hypo':
     
             if fault['length'] is None:
-                areaWC94, lengthWC94 = WC1994(fault['rake'], fault['Mw'])
+                areaWC94, lengthWC94 = WC1994_dimensions(fault['rake'], fault['Mw'])
                 if fault['width'] is not None:
                     fault['length'] = areaWC94 / fault['width']
                 else:
                     fault['length'] = lengthWC94
             if fault['width'] is None:
-                areaWC94, lengthWC94 = WC1994(fault['rake'], fault['Mw'])
+                areaWC94, lengthWC94 = WC1994_dimensions(fault['rake'], fault['Mw'])
                 fault['width'] = areaWC94 / fault['length']
 
             if fault['hypo_along_strike'] is None:
@@ -403,13 +403,12 @@ def define_missing_parameters(code, layers, fault, computational_param):
                 # rupture velocity values reported in source studies mainly range between 0.65Vs and 0.85Vs [e.g.,
                 # Heaton, 1990].
 
-        print(fault['rupture_velocity'])
-
-        if fault['slip_mode'] == 'constant':
+        if fault['slip_mode'] == 'uniform':
             # TODO con Wells and Coppersmith e vedere anche cosa fare con dimensioni sottosorgenti e SPEED
-            print('TO DO')
+            slip = compute_slip_point_source(layers, fault)
+            print('slip')
 
-        elif fault['slip_mode'] == 'Archuleta':
+        if fault['slip_mode'] == 'Archuleta' or fault['slip_mode'] == 'uniform':
 
             if fault['subfault_length'] is None and fault['number_subfaults_strike'] is None:
                 fault['subfault_length'] = fault['rupture_velocity']/computational_param['fmax_ucsb']
@@ -448,7 +447,8 @@ def define_missing_parameters(code, layers, fault, computational_param):
     # ovvero la distanza massima
     Distrup = np.sqrt(((0.5 + np.abs(xdlnuc)) * fault['length']) ** 2 +
                               ((0.5 + np.abs(ydlnuc)) * fault['width']) ** 2)
-    fault['rupture_duration'] = Distrup/fault['rupture_velocity']
+    if fault['fault_type'] == 'extended':
+        fault['rupture_duration'] = Distrup/fault['rupture_velocity']
 
     if fault['rise_time'] is None:
         if fault['fault_type'] == 'point':
@@ -467,6 +467,7 @@ def define_missing_parameters(code, layers, fault, computational_param):
         # Allmann, B. P. and P. M. Shearer (2009). Global variations of stress drop for moderate to large
         # earthquakes, J. Geophys. Res. 114, B01310, doi:10.1029/2008JB005821, 22 pp.
         vs_average = compute_vs_average_on_fault(fault, layers)
+        #controllare unita di misura
         fault['fc'] = (0.42 * vs_average * 10 ** 3) * (fault['stress_drop'] * 10 ** 6 / fault['Mo']) ** (1. / 3.)
     elif fault['fc'] is None and fault['stress_drop'] is None:
         average_stress_drop = 4  # Allman and Shearer

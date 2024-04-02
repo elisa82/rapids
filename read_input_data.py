@@ -73,6 +73,8 @@ def create_computational_param():
     fmin_ucsb = None
     fmax_hisada = None
     kappa = None
+    qzero = None
+    alpha = None
     spectral_degree = None
     fval_quality_factor = None
     damping = None
@@ -98,6 +100,8 @@ def create_computational_param():
         "fmax_hisada": fmax_hisada,
         "fmin_ucsb": fmin_ucsb,
         "kappa": kappa,
+        "qzero": qzero,
+        "alpha": alpha,
         "spectral_degree": spectral_degree,
         "fval_quality_factor": fval_quality_factor,
         "damping": damping,
@@ -198,7 +202,15 @@ def create_fault():
     return fault
 
 
-def create_cineca_slurm(nnodes, memory, partition, duration, ntask_per_node, account, job_name):
+def create_cineca_slurm():
+    nnodes = None
+    memory = None  
+    partition = None
+    duration = None
+    ntask_per_node = None
+    account = None
+    job_name = None
+
     cineca = {
         "nnodes": nnodes,
         "memory": memory,
@@ -382,18 +394,18 @@ def read_input_data(fileini, code, calculation_mode):
         except KeyError:
             pass
 
-        if 'ucsb' not in code:
+        #Forse questa parte va aggiustata
+        try:
+            fault['slip_file'] = input['slip_file']
+        except KeyError:
             try:
-                fault['slip_file'] = input['slip_file']
+                fault['slip_mode'] = input['slip_mode']
+                if fault['slip_mode'] == 'file_xta':
+                    fault['file_xta'] = input['file_xta']
+                    fault['nsubcells_length_xta'] = int(input['nsubcells_length_xta'])
+                    fault['nsubcells_width_xta'] = int(input['nsubcells_width_xta'])
             except KeyError:
-                try:
-                    fault['slip_mode'] = input['slip_mode']
-                    if fault['slip_mode'] == 'file_xta':
-                        fault['file_xta'] = input['file_xta']
-                        fault['nsubcells_length_xta'] = int(input['nsubcells_length_xta'])
-                        fault['nsubcells_width_xta'] = int(input['nsubcells_width_xta'])
-                except KeyError:
-                    sys.exit('Error: the slip file must be defined for an extended seismic source')
+                sys.exit('Error: the slip file must be defined for an extended seismic source')
 
         #Lo zero della faglia è sempre in alto a sinistra, ma attenzione allo strike!
         try:
@@ -487,6 +499,8 @@ def read_input_data(fileini, code, calculation_mode):
         computational_param['kappa'] = float(input['kappa'])
         computational_param['dt_ucsb'] = float(input['dt_ucsb'])
         computational_param['npts_ucsb'] = int(input['npts_ucsb'])
+        computational_param['qzero'] = float(input['qzero'])
+        computational_param['alpha'] = float(input['alpha'])
 
     if 'ucsb' in code or fault['slip_mode'] == 'Archuleta':
         computational_param['fmax_ucsb'] = float(input['fmax_ucsb'])
@@ -574,14 +588,17 @@ def read_input_data(fileini, code, calculation_mode):
     if calculation_mode == '--stitch':
         computational_param['freq_join'] = float(input['freq_join'])
 
+    cineca = create_cineca_slurm()
+
     if 'speed' in code:
-        nnodes = int(input['nnodes'])
-        memory = int(input['memory'])
-        partition = input['partition']
-        duration = input['duration']
-        ntask_per_node = int(input['ntask_per_node'])
-        account = input['account']
-        job_name = input['job_name']
-    cineca = create_cineca_slurm(nnodes, memory, partition, duration, ntask_per_node, account, job_name)
+        cineca['nnodes'] = int(input['nnodes'])
+        cineca['memory'] = int(input['memory'])
+        cineca['partition'] = input['partition']
+        cineca['duration'] = input['duration']
+        cineca['ntask_per_node'] = int(input['ntask_per_node'])
+        cineca['account'] = input['account']
+        cineca['job_name'] = input['job_name']
+   
+    cineca = create_cineca_slurm()
 
     return layers, fault, computational_param, sites, plot_param, topo, output_folder, cineca

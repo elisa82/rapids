@@ -1,9 +1,11 @@
-def create_input_ucsb_run(folder, layers, fault, computational_param, sites, path_code, mode_ucsb, green):
+def create_input_ucsb_run(folder, layers, fault, computational_param, sites, path_code, path_code_ucsb_green_HF, 
+        path_code_ucsb_green_LF,code, green, band_freq):
     import os
     import subprocess
     from rapids.create_input_ucsb_files import create_input_ffsp
     from rapids.create_input_ucsb_files import create_syn1D
     from rapids.create_input_ucsb_files import create_model
+    from rapids.create_input_ucsb_files import create_model_HF
     from rapids.create_input_ucsb_files import create_Green
     from rapids.create_input_ucsb_files import create_stations
     from rapids.fault_slip import plot_slip
@@ -21,12 +23,40 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
     else:
         subprocess.call([path_code + '/ffsp_v2'])
     plot_slip(folder, fault, is_moment)
-    if mode_ucsb == 'full':
-        if green == 1:
-            create_Green(folder, computational_param, fault, sites)
-            os.system('mpirun /Users/elisa/Documents/Programmi/UCSB_broadband/FK/FK_MPI_LF/gfbank_mpi')
-            os.system('mv model.green.inf Green_Bank.inf')
+    if code == 'ucsb':
         create_stations(folder, sites, fault)
         create_syn1D(folder, computational_param)
-        subprocess.call([path_code + '/syn_1d'])
+        if 'LF' in band_freq:
+            folder_LF = folder + '/LF'
+            if not os.path.exists(folder_LF):
+                os.makedirs(folder_LF)
+            os.chdir(folder_LF)
+            os.system('cp ../stations.xy .')
+            os.system('cp ../model.vel model_lf.vel')
+            if green == 'green':
+                create_Green(folder_LF, computational_param, fault, sites, 'LF')
+                command = 'mpirun ' + path_code_ucsb_green_LF + '/gfbank_mpi'
+                os.system(command)
+                os.system('mv model.green_LF.inf Green_Bank.inf')
+            os.system('cp ../syn_1d.inp .')
+            os.system('cp ../source_model.list .')
+            os.system('cp ../Source.bst .')
+            subprocess.call([path_code + '/syn_1d'])
+        if 'HF' in band_freq:
+            folder_HF = folder + '/HF'
+            if not os.path.exists(folder_HF):
+                os.makedirs(folder_HF)
+            os.chdir(folder_HF)
+            os.system('cp ../stations.xy .')
+            os.system('cp ../model.vel target.vel')
+            if green == 'green':
+                create_Green(folder_HF, computational_param, fault, sites, 'HF')
+                create_model_HF(folder_HF, layers)
+                command = 'mpirun ' + path_code_ucsb_green_HF + '/gfbank_mpi'
+                os.system(command)
+                os.system('mv model.green_HF.inf Green_Bank.inf')
+            os.system('cp ../syn_1d.inp .')
+            os.system('cp ../source_model.list .')
+            os.system('cp ../Source.bst .')
+            subprocess.call([path_code + '/syn_1d'])
     return

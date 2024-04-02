@@ -287,7 +287,7 @@ def define_selected_time_history(selected_code, folder_simulation, nobs, desired
         filename_out = folder_simulation + "/" + sites['ID'][nobs] + "." + comp_str_out + ".gm1D." + str(isource).zfill(3)
         write_uscb_format(filename_out, npts, dt, sig_vel)
 
-    if selected_code == 'ucsb' or selected_code == 'speed' or selected_code == 'stitched':
+    if selected_code == 'ucsb' or selected_code == 'speed' or selected_code == 'stitched-ucsb':
         if comp == 'NS':
             comp_str = '000'
         if comp == 'EW':
@@ -298,7 +298,7 @@ def define_selected_time_history(selected_code, folder_simulation, nobs, desired
             filename = folder_simulation + "/" + sites['ID'][nobs] + "." + comp_str + ".gm1D." + str(isource).zfill(3)
         if selected_code == 'speed':
             filename = folder_simulation + "/" + sites['ID'][nobs] + "." + comp_str + ".gm3D." + str(isource).zfill(3)
-        if selected_code == 'stitched':
+        if selected_code == 'stitched-ucsb':
             filename = folder_simulation + "/" + sites['ID'][nobs] + "." + comp_str + ".gmBB." + str(isource).zfill(3)
         time_series = []
         with open(filename, 'r') as f:
@@ -409,7 +409,8 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
     folder_hisada = output_folder + '/HISADA'
     folder_ucsb = output_folder + '/UCSB'
     folder_speed = output_folder + '/SPEED'
-    folder_stitched = output_folder + '/STITCHED'
+    folder_stitched_ucsb = output_folder + 'UCSB/STITCHED'
+    folder_stitched_speeducsb = output_folder + '/STITCHED'
     folder_msdwn = output_folder + '/MS-DWN'
     folder_ms = output_folder + '/MS'
     folder_dwn = output_folder + '/DWN'
@@ -427,7 +428,8 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
         peaks_hisada = np.zeros((len(sites['ID']), 7))
         peaks_speed = np.zeros((len(sites['ID']), 7))
         peaks_ucsb = np.zeros((len(sites['ID']), 7))
-        peaks_stitched = np.zeros((len(sites['ID']), 7))
+        peaks_stitched_ucsb = np.zeros((len(sites['ID']), 7))
+        peaks_stitched_speeducsb = np.zeros((len(sites['ID']), 7))
         peaks_msdwn = np.zeros((len(sites['ID']), 7))
         peaks_ms = np.zeros((len(sites['ID']), 7))
         peaks_dwn = np.zeros((len(sites['ID']), 7))
@@ -450,7 +452,7 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                 plot_file = folder_plot + '/' + str(sites['ID'][iobs]) + "_" + code + "." + ext_out + '_' + \
                         str(isource).zfill(3) + ".png"
                 plt.figure(100 * j + iobs)
-                for jj in range(7):
+                for jj in range(8):
                     if jj == 0:
                         if 'hisada' in code:
                             selected_code = 'hisada'
@@ -509,25 +511,44 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                         else:
                             pass
                     if jj == 3:
-                        if 'stitched' in code:
-                            selected_code = 'stitched'
-                            folder_simulation = folder_stitched
-                            label_code = 'STITCHED'
+                        if 'stitched-ucsb' in code:
+                            selected_code = 'stitched-ucsb'
+                            folder_simulation = folder_stitched_ucsb
+                            label_code = 'STITCHED-UCSB'
                             col = 'k'
                             if fmax is not None and computational_param['fmax_ucsb'] < fmax:
-                                fmax_stitched = computational_param['fmax_ucsb'] #stitched è uguale ad ucsb
+                                fmax_stitched_ucsb = computational_param['fmax_ucsb'] #stitched è uguale ad ucsb
                             else:
-                                fmax_stitched = fmax
+                                fmax_stitched_ucsb = fmax
                             line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
-                                                              sites, label_code, col, fmin, fmax_stitched, isource)
+                                                              sites, label_code, col, fmin, fmax_stitched_ucsb, isource)
                             handles_tag.append(line_name)
-                            peaks_stitched[iobs, 3: 7] = peaks
-                            peaks_stitched[iobs, 0] = iobs+1
-                            peaks_stitched[iobs, 1] = sites['lon'][iobs]
-                            peaks_stitched[iobs, 2] = sites['lat'][iobs]
+                            peaks_stitched_ucsb[iobs, 3: 7] = peaks
+                            peaks_stitched_ucsb[iobs, 0] = iobs+1
+                            peaks_stitched_ucsb[iobs, 1] = sites['lon'][iobs]
+                            peaks_stitched_ucsb[iobs, 2] = sites['lat'][iobs]
                         else:
                             pass
                     if jj == 4:
+                        if 'stitched-speeducsb' in code:
+                            selected_code = 'stitched-speeducsb'
+                            folder_simulation = folder_stitched_speeducsb
+                            label_code = 'STITCHED-SPEEDUCSB'
+                            col = 'k'
+                            if fmax is not None and computational_param['fmax_ucsb'] < fmax:
+                                fmax_stitched_speeducsb = computational_param['fmax_ucsb'] #stitched è uguale ad ucsb
+                            else:
+                                fmax_stitched_speeducsb = fmax
+                            line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                                                              sites, label_code, col, fmin, fmax_stitched_speeducsb, isource)
+                            handles_tag.append(line_name)
+                            peaks_stitched_speeducsb[iobs, 3: 7] = peaks
+                            peaks_stitched_speeducsb[iobs, 0] = iobs+1
+                            peaks_stitched_speeducsb[iobs, 1] = sites['lon'][iobs]
+                            peaks_stitched_speeducsb[iobs, 2] = sites['lat'][iobs]
+                        else:
+                            pass
+                    if jj == 5:
                         if 'hybridmd' in code:
                             selected_code = 'msdwn'
                             folder_simulation = folder_msdwn
@@ -544,7 +565,7 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                         else:
                             pass
 
-                    if jj == 5:
+                    if jj == 6:
                         if 'ms' in code:
                             selected_code = 'ms'
                             folder_simulation = folder_ms
@@ -561,7 +582,7 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                         else:
                             pass
 
-                    if jj == 6:
+                    if jj == 7:
                         if 'dwn' in code:
                             selected_code = 'dwn'
                             folder_simulation = folder_dwn
@@ -608,7 +629,7 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                 plt.savefig(plot_file)
                 plt.close('')
 
-        for icode in range(7):
+        for icode in range(8):
             #site_number lon lat peak_NS peak_EW peak_Z
             if icode == 0:
                 if 'hisada' in code:
@@ -641,16 +662,26 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                     pass
 
             if icode == 3:
-                if 'stitched' in code:
-                    selected_code = 'stitched'
+                if 'stitched-ucsb' in code:
+                    selected_code = 'stitched-ucsb'
                     file_peaks = folder_plot + '/peaks_'+ selected_code + "." + ext_out + '.txt'
-                    np.savetxt(file_peaks, peaks_stitched, fmt=fmt)
+                    np.savetxt(file_peaks, peaks_stitched_ucsb, fmt=fmt)
                     plot_file_map = folder_plot + '/' + selected_code + "." + ext_out + ".png"
-                    create_figure_3plots(peaks_stitched, fault, sites, label_map, j, plot_file_map)
+                    create_figure_3plots(peaks_stitched_ucsb, fault, sites, label_map, j, plot_file_map)
                 else:
                     pass
 
             if icode == 4:
+                if 'stitched-speeducsb' in code:
+                    selected_code = 'stitched-speeducsb'
+                    file_peaks = folder_plot + '/peaks_'+ selected_code + "." + ext_out + '.txt'
+                    np.savetxt(file_peaks, peaks_stitched_speeducsb, fmt=fmt)
+                    plot_file_map = folder_plot + '/' + selected_code + "." + ext_out + ".png"
+                    create_figure_3plots(peaks_stitched_speeducsb, fault, sites, label_map, j, plot_file_map)
+                else:
+                    pass
+
+            if icode == 5:
                 if 'hybridmd' in code:
                     selected_code = 'msdwn'
                     file_peaks = folder_plot + '/peaks_'+ selected_code + "." + ext_out + '.txt'
@@ -660,7 +691,7 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                 else:
                     pass
 
-            if icode == 5:
+            if icode == 6:
                 if 'ms' in code:
                     selected_code = 'ms'
                     file_peaks = folder_plot + '/peaks_'+ selected_code + "." + ext_out + '.txt'
@@ -670,7 +701,7 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                 else:
                     pass
 
-            if icode == 6:
+            if icode == 7:
                 if 'dwn' in code:
                     selected_code = 'dwn'
                     file_peaks = folder_plot + '/peaks_'+ selected_code + "." + ext_out + '.txt'

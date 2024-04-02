@@ -143,12 +143,47 @@ def create_model(folder, layers):
     fid.close()
 
 
-def create_Green(folder, computational_param, fault, sites):
+def create_model_HF(folder, layers):
+    fid = open(folder + '/model_hf.vel', 'w')
+    nlayers = len(layers['thk'])
+    thk_ucsb = list(layers['thk'])
+    thk_ucsb[nlayers - 1] = 0
+
+    vp_moho = 7.8
+
+    nlayers = 0
+    thick_crust = 0
+    index_moho = -999
+    for i in range(len(layers['thk'])):
+        if layers['vp'][i] < 7.8:
+            thick_crust += layers['thk'][i] 
+        else:
+            nlayers += 1
+            if index_moho < 0:
+                index_moho = i
+    nlayers = nlayers + 1
+    fid.write('{}    {}\n'.format(nlayers, 1.0))
+
+    fid.write('{:7.2f}{:7.2f}{:7.2f}{:7.1f}{:8.1f}{:8.1f}\n'.format(layers['vp'][index_moho - 1], layers['vs'][index_moho - 1],
+                                                                layers['rho'][index_moho - 1], thick_crust, layers['qp'][index_moho-1],
+                                                                layers['qs'][index_moho - 1]))
+    for i in range(nlayers-1):
+            fid.write('{:7.2f}{:7.2f}{:7.2f}{:7.1f}{:8.1f}{:8.1f}\n'.format(layers['vp'][index_moho + i], layers['vs'][index_moho + i],
+                                                                    layers['rho'][index_moho + i], thk_ucsb[index_moho + i], layers['qp'][index_moho + i],
+                                                                    layers['qs'][index_moho + i]))
+    fid.close()
+
+
+def create_Green(folder, computational_param, fault, sites, type_green):
     import numpy as np
     import math
 
     fid = open(folder + '/Green.in', 'w')
-    fid.write('{}\n'.format('model.vel'))
+    if type_green == 'LF':
+        file_model = 'model_lf.vel'
+    if type_green == 'HF':
+        file_model = 'model_hf.vel'
+    fid.write('{}\n'.format(file_model))
 
     dep_step = 0.5
 
@@ -190,7 +225,11 @@ def create_Green(folder, computational_param, fault, sites):
     t_cor = 3.0
     # number of time steps, time increment, seconds to be saved before first arrival. This should never be set to 0 (because of wrap‐ around artifacts!!!
     fid.write('{} {} {}\n'.format(computational_param['npts_ucsb'], computational_param['dt_ucsb'], t_cor))
-    fid.write('{}\n'.format('model.green'))  # "The name of file to store Green Bank"
+    if type_green == 'HF':
+        fid.write('{}\n'.format('model.green_HF'))  # "The name of file to store Green Bank"
+        fid.write('{} {}\n'.format(computational_param['qzero'], computational_param['alpha']))
+    if type_green == 'LF':
+        fid.write('{}\n'.format('model.green_LF'))  # "The name of file to store Green Bank"
     fid.close()
 
 
