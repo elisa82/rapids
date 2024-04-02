@@ -1,5 +1,5 @@
 def create_input_ucsb_run(folder, layers, fault, computational_param, sites, path_code, path_code_ucsb_green_HF, 
-        path_code_ucsb_green_LF,code, green, band_freq):
+        path_code_ucsb_green_LF,calculation_mode, green, band_freq):
     import os
     import subprocess
     from rapids.create_input_ucsb_files import create_input_ffsp
@@ -15,15 +15,16 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
     if not os.path.exists(folder):
         os.makedirs(folder)
     os.chdir(folder)
-    create_model(folder, layers)
-    is_moment = 1
-    create_input_ffsp(folder, computational_param, fault, is_moment)
-    if fault['IDx'] == 'Yoffe':
-        subprocess.call([path_code + '/ffsp_dcf_v2'])
-    else:
-        subprocess.call([path_code + '/ffsp_v2'])
-    plot_slip(folder, fault, is_moment)
-    if code == 'ucsb':
+    if calculation_mode == '--source' or calculation_mode == '--run':
+        create_model(folder, layers)
+        is_moment = 1
+        create_input_ffsp(folder, computational_param, fault, is_moment)
+        if fault['IDx'] == 'Yoffe':
+            subprocess.call([path_code + '/ffsp_dcf_v2'])
+        else:
+            subprocess.call([path_code + '/ffsp_v2'])
+        plot_slip(folder, fault, is_moment)
+    if calculation_mode == '--seis' or calculation_mode == '--run':
         create_stations(folder, sites, fault)
         create_syn1D(folder, computational_param)
         if 'LF' in band_freq:

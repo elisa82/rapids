@@ -26,13 +26,16 @@ if __name__ == '__main__':
     except IndexError:
         sys.exit('usage:\n'
                  'python3 -m rapids #input_file [code] [mode]')
-    if code == 'ucsb' and calculation_mode == '--run':
-        try:
-            green = sys.argv[4]
-            freq_band = sys.argv[5]
-        except IndexError:
-            sys.exit('usage:\n'
-                 'python3 -m rapids #input_file ucsb --run [green/nogreen] [HF/LF/LFHF/HFLF]')
+    if code == 'ucsb':
+        green = 'nogreen'
+        freq_band = []
+        if calculation_mode == '--run' or calculation_mode == '--seis':
+            try:
+                green = sys.argv[4]
+                freq_band = sys.argv[5]
+            except IndexError:
+                sys.exit('usage:\n'
+                    'python3 -m rapids #input_file ucsb --run [green/nogreen] [HF/LF/LFHF/HFLF]')
 
     #read settings
     settings = read_settings('settings.ini')
@@ -48,17 +51,19 @@ if __name__ == '__main__':
             create_input_hisada_run(folder, layers, fault, computational_param, sites, settings['path_code_hisada'])
 
     if code == 'ucsb':
-        if calculation_mode == '--run':
-            if fault['IDx'] == 'Yoffe':
-                path_code_ucsb = settings['path_code_ucsb_Yoffe']
-            else:
-                path_code_ucsb = settings['path_code_ucsb']
-            path_code_ucsb_green_HF = settings['path_code_ucsb_green_HF']
-            path_code_ucsb_green_LF = settings['path_code_ucsb_green_LF']
-            print(path_code_ucsb_green_HF)
+        path_code_ucsb_green_HF = settings['path_code_ucsb_green_HF']
+        path_code_ucsb_green_LF = settings['path_code_ucsb_green_LF']
+        if fault['IDx'] == 'Yoffe':
+            path_code_ucsb = settings['path_code_ucsb_Yoffe']
+        else:
+            path_code_ucsb = settings['path_code_ucsb']
+
+        if calculation_mode != '--post':
 
             create_input_ucsb_run(folder, layers, fault, computational_param, sites, path_code_ucsb,
-                                  path_code_ucsb_green_HF, path_code_ucsb_green_LF, code, green, freq_band)
+                                path_code_ucsb_green_HF, path_code_ucsb_green_LF, calculation_mode, green, freq_band)
+
+        if calculation_mode == '--run':
             if 'LF' in freq_band and 'HF' in freq_band:
                 num_sm = 1
                 stitch(folder, path_code_ucsb, computational_param, fault, sites, num_sm, code)
@@ -79,7 +84,7 @@ if __name__ == '__main__':
                     green = 'nogreen'
                     band_freq = []
                     create_input_ucsb_run(folder, layers, fault, computational_param, sites,
-                                      path_code_ucsb, path_code_ucsb_green_HF, path_code_ucsb_green_LF, code, green, freq_band) 
+                                      path_code_ucsb, path_code_ucsb_green_HF, path_code_ucsb_green_LF, '--source', green, freq_band) 
             create_input_speed_run(folder, layers, fault, computational_param, sites, settings['path_code_speed'],
                                    topo, settings['path_cubit'], cineca)
 
