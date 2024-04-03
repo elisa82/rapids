@@ -654,7 +654,7 @@ def create_input_extended(folder, fault, layers, folder_ucsb):
     fid.close()
 
     if fault['slip_mode'] == 'Archuleta':
-        if fault['IDx'] == 'Yoffe':
+        if fault['IDx'] == 'Yoffe-DCF':
             file_slip = folder_ucsb + '/Source.bst'
         else:
             file_slip = folder_ucsb + '/Source.001'

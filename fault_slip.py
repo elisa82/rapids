@@ -26,7 +26,7 @@ def plot_slip(folder, fault, is_moment):
     line = fid.readline()
     c = line.split()
     Mo = float(c[0])
-    if fault['IDx'] == 'Yoffe':
+    if fault['IDx'] == 'Yoffe-DCF':
         fc1 = float(c[1])
         fc2 = float(c[2])
         rv = float(c[3])
@@ -66,7 +66,7 @@ def plot_slip(folder, fault, is_moment):
     for num in range(1, 2):
         index = '{0:03}'.format(num)
         sequence = str(index)
-        if fault['IDx'] == 'Yoffe':
+        if fault['IDx'] == 'Yoffe-DCF':
             file = "Source.bst"
             prefix_file_slip = "Slip.bst"
         else:

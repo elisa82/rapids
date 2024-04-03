@@ -53,7 +53,7 @@ if __name__ == '__main__':
     if code == 'ucsb':
         path_code_ucsb_green_HF = settings['path_code_ucsb_green_HF']
         path_code_ucsb_green_LF = settings['path_code_ucsb_green_LF']
-        if fault['IDx'] == 'Yoffe':
+        if fault['IDx'] == 'Yoffe-DCF':
             path_code_ucsb = settings['path_code_ucsb_Yoffe']
         else:
             path_code_ucsb = settings['path_code_ucsb']
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     if code == 'speed':
         if calculation_mode == '--input':
             if fault['slip_mode'] == 'Archuleta':
-                if fault['IDx'] == 'Yoffe':
+                if fault['IDx'] == 'Yoffe-DCF':
                     path_code_ucsb = settings['path_code_ucsb_Yoffe']
                 else:
                     path_code_ucsb = settings['path_code_ucsb']
@@ -105,13 +105,13 @@ if __name__ == '__main__':
 
         if 'ucsb' in code:
 
-            if fault['IDx'] == 'Yoffe':
+            if fault['IDx'] == 'Yoffe-DCF':
                 path_code_ucsb = settings['path_code_ucsb_Yoffe']
             else:
                 path_code_ucsb = settings['path_code_ucsb']
         
         num_sm = 1
-        stitch(folder, path_code_ucsb, computational_param, fault, sites, num_sm)
+        stitch(folder, path_code_ucsb, computational_param, fault, sites, num_sm, code)
 
         code = 'stitched-'+code
         post_processing(folder, plot_param, code, sites, fault, computational_param)

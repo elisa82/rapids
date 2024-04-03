@@ -34,7 +34,7 @@ def stitch(folder, path_code, computational_param, fault, sites, num_sm, code):
     if 'speed' in code:
         folderLF = folder + '/SPEED'
     if 'ucsb' in code:
-        folderHF = folder + '/UCSB'
+        folderHF = folder + '/UCSB/HF'
     elif 'msdwn' in code:
         folderHF = folder + '/MS-DWN'
     if code == 'ucsb':
@@ -58,9 +58,9 @@ def stitch(folder, path_code, computational_param, fault, sites, num_sm, code):
     os.chdir(folder)
     copy_station_list = 'cp ../UCSB/HF/stations.xy .'
     os.system(copy_station_list)
-    copy_station_list = 'cp ../UCSB/HF/stations.ll .'
+    copy_station_list = 'cp ../UCSB/stations.ll .'
     os.system(copy_station_list)
-    copy_vel_model = 'cp ../UCSB/HF/target.vel model.vel'
+    copy_vel_model = 'cp ../UCSB/model.vel .'
     os.system(copy_vel_model)
     write_stitch_VMname(folder, sites)
     write_stitch_input(folderLF, folderHF, folder, computational_param, fault, num_sm)

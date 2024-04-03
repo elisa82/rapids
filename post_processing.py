@@ -473,7 +473,7 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                         else:
                             pass
                     if jj == 1:
-                        if 'speed' in code:
+                        if 'speed' in code and 'stitched' not in code:
                             selected_code = 'speed'
                             folder_simulation = folder_speed
                             label_code = 'SPEED'
@@ -492,7 +492,7 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                         else:
                             pass
                     if jj == 2:
-                        if 'ucsb' in code:
+                        if 'ucsb' in code and 'stitched' not in code:
                             selected_code = 'ucsb'
                             folder_simulation = folder_ucsb
                             label_code = 'UCSB'

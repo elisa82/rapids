@@ -11,10 +11,10 @@ def create_input_ffsp(folder, computational_param, fault, is_moment):
         id_sf_type = 1
     if fault['IDx'] == 'Archuleta':
         id_sf_type = 8
-    if fault['IDx'] == 'Yoffe':
+    if fault['IDx'] == 'Yoffe-DCF':
         id_sf_type = 8
 
-    if fault['IDx'] == 'Yoffe':
+    if fault['IDx'] == 'Yoffe-DCF':
         fid.write('{} {} {} {} \n'.format(id_sf_type, computational_param['fmin_ucsb'], computational_param['fmax_ucsb'],
                                       ' ! index of slip rate function'))
     else:
@@ -50,7 +50,7 @@ def create_input_ffsp(folder, computational_param, fault, is_moment):
     # Corner_Freq = 0.08;
     # end
 
-    if fault['IDx'] == 'Yoffe':
+    if fault['IDx'] == 'Yoffe-DCF':
         fc_main_1 = 1 / (np.pi * fault['rupture_duration'])
         fc_main_2 = 0.8 / fault['rise_time']
         # JA19_2S (Non-Self-Similar)
@@ -230,6 +230,8 @@ def create_Green(folder, computational_param, fault, sites, type_green):
         fid.write('{} {}\n'.format(computational_param['qzero'], computational_param['alpha']))
     if type_green == 'LF':
         fid.write('{}\n'.format('model.green_LF'))  # "The name of file to store Green Bank"
+    fid.write('{}\n'.format('0'))
+    fid.write('{}\n'.format(''))
     fid.close()
 
 
@@ -255,5 +257,12 @@ def create_stations(folder, sites, fault):
         comp1 = 0.000000
         comp2 = 90.000000
         fid.write('{} {} {} {} {}\n'.format(statX, statY, statZ, comp1, comp2))
+    fid.close()
+
+    fid = open(folder + '/stations.ll', 'w')
+    nobs = len(sites['Z'])
+    fid.write('{}\n'.format(nobs))
+    for k in range(nobs):
+        fid.write('{} {} {}\n'.format(sites['lon'][k], sites['lat'][k], sites['ID'][k]))
     fid.close()
     return
