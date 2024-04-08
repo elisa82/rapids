@@ -104,7 +104,7 @@ def create_input_ffsp(folder, computational_param, fault, is_moment):
     fid.write('{}\n'.format('model.vel'))
     North_Angle = 0.0
     fid.write('{} {}\n'.format(North_Angle, '! angle north to x'))
-    fid.write('{} {}\n'.format(is_moment, ' ! moment (1), slip‐area (2), slip(3)'))
+    fid.write('{} {}\n'.format(is_moment, ' ! moment (1), slip-area (2), slip(3)'))
     fid.write('{}\n'.format('Source'))
     fid.close()
 
@@ -118,7 +118,8 @@ def create_syn1D(folder, computational_param):
     duration = computational_param['dt_ucsb'] * computational_param['npts_ucsb']
     fid.write('{} {} {}\n'.format(computational_param['kappa'], duration, ' ! # duration of outputing GM'))
     fid.write('source_model.list\n')
-    fid.write('stations.xy\n')
+    station_name = 'stations.xy'
+    fid.write('{}\n'.format(station_name))
 #    if computational_param['output_type'] == 'dis':
 #        type_output_int = 1
 #    if computational_param['output_type'] == 'vel':
@@ -154,19 +155,36 @@ def create_model_HF(folder, layers):
     nlayers = 0
     thick_crust = 0
     index_moho = -999
+    #vp_crust = 0
+    #vs_crust = 0
+    #rho_crust = 0
+    #qp_crust = 0
+    #qs_crust = 0
     for i in range(len(layers['thk'])):
         if layers['vp'][i] < 7.8:
             thick_crust += layers['thk'][i] 
+            #vp_crust += layers['vp'][i]*layers['thk'][i]
+            #vs_crust += layers['vs'][i]*layers['thk'][i] 
+            #rho_crust += layers['rho'][i]*layers['thk'][i] 
+            #qp_crust += layers['qp'][i]*layers['thk'][i] 
+            #qs_crust += layers['qs'][i]*layers['thk'][i] 
         else:
             nlayers += 1
             if index_moho < 0:
                 index_moho = i
+    #vp_crust = vp_crust/thick_crust 
+    #vs_crust = vs_crust/thick_crust
+    #rho_crust = rho_crust/thick_crust
+    #qp_crust = qp_crust/thick_crust
+    #qs_crust = qs_crust/thick_crust
     nlayers = nlayers + 1
     fid.write('{}    {}\n'.format(nlayers, 1.0))
 
+    #fid.write('{:7.2f}{:7.2f}{:7.2f}{:7.1f}{:8.1f}{:8.1f}\n'.format(vp_crust, vs_crust,
+    #                                                            rho_crust, thick_crust, qp_crust,qs_crust))
     fid.write('{:7.2f}{:7.2f}{:7.2f}{:7.1f}{:8.1f}{:8.1f}\n'.format(layers['vp'][index_moho - 1], layers['vs'][index_moho - 1],
-                                                                layers['rho'][index_moho - 1], thick_crust, layers['qp'][index_moho-1],
-                                                                layers['qs'][index_moho - 1]))
+                                                            layers['rho'][index_moho - 1], thick_crust, layers['qp'][index_moho-1],
+                                                             layers['qs'][index_moho - 1]))
     for i in range(nlayers-1):
             fid.write('{:7.2f}{:7.2f}{:7.2f}{:7.1f}{:8.1f}{:8.1f}\n'.format(layers['vp'][index_moho + i], layers['vs'][index_moho + i],
                                                                     layers['rho'][index_moho + i], thk_ucsb[index_moho + i], layers['qp'][index_moho + i],
@@ -241,8 +259,9 @@ def create_stations(folder, sites, fault):
     # y = east
     # z = down
     # check if coordinates system is ok!!!!
-    fid = open(folder + '/stations.xy', 'w')
     nobs = len(sites['Z'])
+    station_name = folder + '/stations.xy'
+    fid = open(station_name, 'w')
     epiX = 0.0
     epiY = 0.0
     placeholder = 0.0

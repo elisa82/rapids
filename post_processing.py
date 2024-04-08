@@ -287,7 +287,7 @@ def define_selected_time_history(selected_code, folder_simulation, nobs, desired
         filename_out = folder_simulation + "/" + sites['ID'][nobs] + "." + comp_str_out + ".gm1D." + str(isource).zfill(3)
         write_uscb_format(filename_out, npts, dt, sig_vel)
 
-    if selected_code == 'ucsb' or selected_code == 'speed' or selected_code == 'stitched-ucsb':
+    if selected_code == 'ucsb' or selected_code == 'speed' or selected_code == 'stitched-ucsb' or selected_code == 'stitched-speeducsb':
         if comp == 'NS':
             comp_str = '000'
         if comp == 'EW':
@@ -298,7 +298,7 @@ def define_selected_time_history(selected_code, folder_simulation, nobs, desired
             filename = folder_simulation + "/" + sites['ID'][nobs] + "." + comp_str + ".gm1D." + str(isource).zfill(3)
         if selected_code == 'speed':
             filename = folder_simulation + "/" + sites['ID'][nobs] + "." + comp_str + ".gm3D." + str(isource).zfill(3)
-        if selected_code == 'stitched-ucsb':
+        if selected_code == 'stitched-ucsb' or selected_code == 'stitched-speeducsb':
             filename = folder_simulation + "/" + sites['ID'][nobs] + "." + comp_str + ".gmBB." + str(isource).zfill(3)
         time_series = []
         with open(filename, 'r') as f:
@@ -642,7 +642,7 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                     pass
 
             if icode == 1:
-                if 'speed' in code:
+                if 'speed' in code and 'stitched' not in code:
                     selected_code = 'speed'
                     file_peaks = folder_plot + '/peaks_'+selected_code + "." + ext_out +'.txt'
                     np.savetxt(file_peaks, peaks_speed, fmt=fmt)
@@ -652,7 +652,7 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                     pass
 
             if icode == 2:
-                if 'ucsb' in code:
+                if 'ucsb' in code and 'stitched' not in code:
                     selected_code = 'ucsb'
                     file_peaks = folder_plot + '/peaks_'+ selected_code + "." + ext_out + '.txt'
                     np.savetxt(file_peaks, peaks_ucsb, fmt=fmt)

@@ -56,9 +56,7 @@ def stitch(folder, path_code, computational_param, fault, sites, num_sm, code):
         subprocess.call([path_code + '/conv3Comp'])
 
     os.chdir(folder)
-    copy_station_list = 'cp ../UCSB/HF/stations.xy .'
-    os.system(copy_station_list)
-    copy_station_list = 'cp ../UCSB/stations.ll .'
+    copy_station_list = 'cp ../UCSB/stations.xy .'
     os.system(copy_station_list)
     copy_vel_model = 'cp ../UCSB/model.vel .'
     os.system(copy_vel_model)

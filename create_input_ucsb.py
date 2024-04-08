@@ -29,6 +29,7 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
         create_syn1D(folder, computational_param)
         if 'LF' in band_freq:
             folder_LF = folder + '/LF'
+            folder_HF = folder + '/HF'
             if not os.path.exists(folder_LF):
                 os.makedirs(folder_LF)
             os.chdir(folder_LF)
@@ -36,13 +37,18 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
             os.system('cp ../model.vel model_lf.vel')
             if green == 'green':
                 create_Green(folder_LF, computational_param, fault, sites, 'LF')
-                command = 'mpirun -np 1' + path_code_ucsb_green_LF + '/gfbank_mpi'
+                command = 'mpirun -np 1 ' + path_code_ucsb_green_LF + '/gfbank_mpi'
                 os.system(command)
                 os.system('mv model.green_LF.inf Green_Bank.inf')
             os.system('cp ../syn_1d.inp .')
             os.system('cp ../source_model.list .')
-            os.system('cp ../Source.bst .')
+            if fault['IDx'] == 'Yoffe-DCF':
+                os.system('cp ../Source.bst .')
+            else:
+                os.system('cp ../Source.001 .')
             subprocess.call([path_code + '/syn_1d'])
+            command = 'cp -r '+folder_LF+' '+folder_HF
+            os.system(command)
         if 'HF' in band_freq:
             folder_HF = folder + '/HF'
             if not os.path.exists(folder_HF):
@@ -53,11 +59,14 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
             if green == 'green':
                 create_Green(folder_HF, computational_param, fault, sites, 'HF')
                 create_model_HF(folder_HF, layers)
-                command = 'mpirun -np 1' + path_code_ucsb_green_HF + '/gfbank_mpi'
+                command = 'mpirun -np 1 ' + path_code_ucsb_green_HF + '/gfbank_mpi'
                 os.system(command)
                 os.system('mv model.green_HF.inf Green_Bank.inf')
             os.system('cp ../syn_1d.inp .')
             os.system('cp ../source_model.list .')
-            os.system('cp ../Source.bst .')
+            if fault['IDx'] == 'Yoffe-DCF':
+                os.system('cp ../Source.bst .')
+            else:
+                os.system('cp ../Source.001 .')
             subprocess.call([path_code + '/syn_1d'])
     return
