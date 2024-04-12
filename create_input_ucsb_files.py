@@ -237,7 +237,7 @@ def create_Green(folder, computational_param, fault, sites, type_green):
     dist_min = (np.min(dist)-1000) / 1000
     if dist_min < 0:
         dist_min = 0.0005
-    d_step = 1
+    d_step = 2
     # N.B. dist max and dist min are only approssimative, nn tengono conto dell'effettiva orientazione della faglia e posizione ipocentro sul piano di faglia
     fid.write('{} {} {}\n'.format(dist_max, dist_min, d_step))
     t_cor = 3.0
