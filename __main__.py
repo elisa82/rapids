@@ -47,12 +47,12 @@ if __name__ == '__main__':
         settings = read_settings('settings.ini')
         print(settings['path_code_ucsb_green_HF'])
 
+        path_data = settings['path_data']
+
         # read input file
         [layers, fault, computational_param, sites, plot_param, topo, folder, cineca] = \
             read_input_data(fileini, code, calculation_mode)
-        fault, layers = define_missing_parameters(code, layers, fault, computational_param)
-
-        path_data = settings['path_data']
+        fault, layers = define_missing_parameters(code, layers, fault, computational_param, path_data)
 
         if code == 'hisada':
             if calculation_mode == '--input':

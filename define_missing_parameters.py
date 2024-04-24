@@ -152,7 +152,7 @@ def create_plot_param():
     }
     return plot_param
 
-def define_missing_parameters(code, layers, fault, computational_param):
+def define_missing_parameters(code, layers, fault, computational_param, path_data):
     import sys
     import numpy as np
     import math
