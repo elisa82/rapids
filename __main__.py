@@ -45,7 +45,6 @@ if __name__ == '__main__':
 
         #read settings
         settings = read_settings('settings.ini')
-        print(settings['path_code_ucsb_green_HF'])
 
         path_data = settings['path_data']
 

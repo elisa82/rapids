@@ -1,4 +1,5 @@
 def create_settings():
+    path_data = None
     path_code_hisada = None
     path_code_speed = None
     path_code_ucsb = None
@@ -7,6 +8,7 @@ def create_settings():
     path_code_ucsb_green_HF = None
     path_code_ucsb_green_LF = None
     settings = {
+        "path_data": path_data,
         "path_code_hisada": path_code_hisada,
         "path_code_speed": path_code_speed,
         "path_code_ucsb": path_code_ucsb,
@@ -30,6 +32,7 @@ def read_settings(file_settings):
                 input[key.strip()] = value.strip()
             line = fp.readline()
 
+    settings['path_data'] = input['path_data']
     settings['path_code_hisada'] = input['path_code_hisada']
     settings['path_code_speed'] = input['path_code_speed']
     settings['path_code_ucsb'] = input['path_code_ucsb']
