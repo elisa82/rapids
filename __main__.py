@@ -51,7 +51,7 @@ if __name__ == '__main__':
         # read input file
         [layers, fault, computational_param, sites, plot_param, topo, folder, cineca] = \
             read_input_data(fileini, code, calculation_mode)
-        fault, layers = define_missing_parameters(code, layers, fault, computational_param, path_data)
+        fault, layers = define_missing_parameters(code, layers, fault, computational_param, path_data, topo)
 
         if code == 'hisada':
             if calculation_mode == '--input':

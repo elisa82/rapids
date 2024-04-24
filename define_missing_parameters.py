@@ -152,7 +152,7 @@ def create_plot_param():
     }
     return plot_param
 
-def define_missing_parameters(code, layers, fault, computational_param, path_data):
+def define_missing_parameters(code, layers, fault, computational_param, path_data, topo):
     import sys
     import numpy as np
     import math
@@ -173,10 +173,13 @@ def define_missing_parameters(code, layers, fault, computational_param, path_dat
         rho_grouped = []
         thk_grouped = []
         next_line = 0
-        for i in range(len(rho)):
-            if not np.isnan(vp[i]):
-                layers['depth_top_layer'] = z[i]
-                break
+        if topo == 1:
+            for i in range(len(rho)):
+                if not np.isnan(vp[i]):
+                    layers['depth_top_layer'] = z[i]
+                    break
+        else:
+            layers['depth_top_layer'] = 0
         for i in range(len(rho)):
             if not np.isnan(vp[i]):
                 if i == next_line:

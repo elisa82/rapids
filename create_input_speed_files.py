@@ -1173,15 +1173,15 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
         fid.write('{}\n'.format(''))
 
     if topo == 0:
-        fid.write('{} {} {} {}\n'.format('create vertex', coord1[0], coord1[1], '0'))
-        fid.write('{} {} {} {}\n'.format('create vertex', coord2[0], coord2[1], '0'))
-        fid.write('{} {} {} {}\n'.format('create vertex', coord3[0], coord3[1], '0'))
+        fid.write('{} {} {} {}\n'.format('create vertex', coord1[0], coord1[1], -layers['depth_top_layer'] * 1000))
+        fid.write('{} {} {} {}\n'.format('create vertex', coord2[0], coord2[1], -layers['depth_top_layer'] * 1000))
+        fid.write('{} {} {} {}\n'.format('create vertex', coord3[0], coord3[1], -layers['depth_top_layer'] * 1000))
         fid.write('{}\n'.format(''))
         fid.write('{}\n'.format('create surface parallelogram vertex 1 2 3'))
     else:
-        fid.write('{} {} {} {}\n'.format('create vertex', coord1[0], coord1[1], (-layers['depth_top_layer']-layers['thk'][0]) * 1000))
-        fid.write('{} {} {} {}\n'.format('create vertex', coord2[0], coord2[1], (-layers['depth_top_layer']-layers['thk'][0]) * 1000))
-        fid.write('{} {} {} {}\n'.format('create vertex', coord3[0], coord3[1], (-layers['depth_top_layer']-layers['thk'][0]) * 1000))
+        fid.write('{} {} {} {}\n'.format('create vertex', coord1[0], coord1[1], -(layers['depth_top_layer']+layers['thk'][0]) * 1000))
+        fid.write('{} {} {} {}\n'.format('create vertex', coord2[0], coord2[1], -(layers['depth_top_layer']+layers['thk'][0]) * 1000))
+        fid.write('{} {} {} {}\n'.format('create vertex', coord3[0], coord3[1], -(layers['depth_top_layer']+layers['thk'][0]) * 1000))
         fid.write('{}\n'.format(''))
         fid.write('{}\n'.format('create surface parallelogram vertex 5 6 7'))
         fid.write('{}\n'.format(''))
@@ -1204,9 +1204,10 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     fid.write('{}\n'.format('## Shifting topography layer by depth of each 1D velocity layer'))
     fid.write('{}\n'.format(''))
     nlayers = len(layers['rho'])
+
     if topo == 0:
-        fid.write('{} {}\n'.format('surface 1 copy move x 0 y 0 z', (-layers['depth_top_layer']-layers['thk'][
-            0]) * 1000))  # create first layer alone for consistency with topo procedure
+        fid.write('{} {}\n'.format('surface 1 copy move x 0 y 0 z', -(layers['depth_top_layer']+layers['thk'][0]) * 1000))  # create first layer alone for consistency with topo procedure
+    
     depth_layers = layers['thk'][0] + layers['depth_top_layer']
     for i in range(1, nlayers):
         depth_layers = depth_layers + layers['thk'][i]
