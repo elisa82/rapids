@@ -162,7 +162,8 @@ def define_missing_parameters(code, layers, fault, computational_param):
     from rapids.conversions import utm_to_lon_lat
 
     if layers['vel_model'] == 'NAC_1D_Friuli':
-        profile = np.loadtxt('rapids/DATA/VelModel/friuli_1D.xyz', skiprows=3)
+        vel_model_file = path_data + '/VelModel/friuli_1D.xyz'
+        profile = np.loadtxt(vel_model_file, skiprows=3)
         z = profile[:, 0]
         vp = profile[:, 1]
         vs = profile[:, 3]

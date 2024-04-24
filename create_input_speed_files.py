@@ -1107,7 +1107,7 @@ def rename_curves(val):
     return num
 
 
-def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cubit):
+def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cubit, path_data):
     import math
     import os
     import sys
@@ -1120,7 +1120,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     coord1, coord2, coord3, coord4 = define_area(fault, sites, computational_param)
 
     if topo == 1:
-        path_topo = '$HOME/rapids/DATA/DEM'
+        path_topo = path_data+'/DEM'
         temp1, temp2, zone, letter = determine_utm_coord(fault['hypo']['lon'], fault['hypo']['lat'])
         coord1_lon, coord1_lat = utm_to_lon_lat(coord1[0], coord1[1], zone)
         coord2_lon, coord2_lat = utm_to_lon_lat(coord2[0], coord2[1], zone)

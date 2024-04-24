@@ -1,4 +1,4 @@
-def create_input_hisada_run(folder, layers, fault, computational_param, sites, path_code):
+def create_input_hisada_run(folder, layers, fault, computational_param, sites, path_code, path_data):
     from rapids.create_input_hisada_files import create_input_grflt12s
     from rapids.create_input_hisada_files import create_script_hisada
     from rapids.create_input_hisada_files import create_answers_grflt12s

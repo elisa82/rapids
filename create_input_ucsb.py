@@ -1,5 +1,5 @@
 def create_input_ucsb_run(folder, layers, fault, computational_param, sites, path_code, path_code_ucsb_green_HF, 
-        path_code_ucsb_green_LF,calculation_mode, green, band_freq):
+        path_code_ucsb_green_LF,calculation_mode, green, band_freq, path_data):
     import os
     import subprocess
     from rapids.create_input_ucsb_files import create_input_ffsp

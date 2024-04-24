@@ -52,9 +52,11 @@ if __name__ == '__main__':
             read_input_data(fileini, code, calculation_mode)
         fault, layers = define_missing_parameters(code, layers, fault, computational_param)
 
+        path_data = settings['path_data']
+
         if code == 'hisada':
             if calculation_mode == '--input':
-                create_input_hisada_run(folder, layers, fault, computational_param, sites, settings['path_code_hisada'])
+                create_input_hisada_run(folder, layers, fault, computational_param, sites, settings['path_code_hisada'], path_data)
 
         if code == 'ucsb':
             path_code_ucsb_green_HF = settings['path_code_ucsb_green_HF']
@@ -67,7 +69,8 @@ if __name__ == '__main__':
             if calculation_mode != '--post':
 
                 create_input_ucsb_run(folder, layers, fault, computational_param, sites, path_code_ucsb,
-                                    path_code_ucsb_green_HF, path_code_ucsb_green_LF, calculation_mode, green, freq_band)
+                                    path_code_ucsb_green_HF, path_code_ucsb_green_LF, calculation_mode, green, freq_band, 
+                                    path_data)
 
             if calculation_mode == '--run':
                 if 'LF' in freq_band and 'HF' in freq_band:
@@ -90,9 +93,10 @@ if __name__ == '__main__':
                         green = 'nogreen'
                         band_freq = []
                         create_input_ucsb_run(folder, layers, fault, computational_param, sites,
-                                          path_code_ucsb, path_code_ucsb_green_HF, path_code_ucsb_green_LF, '--source', green, freq_band) 
+                                          path_code_ucsb, path_code_ucsb_green_HF, path_code_ucsb_green_LF, '--source', green, 
+                                          freq_band, path_data) 
                 create_input_speed_run(folder, layers, fault, computational_param, sites, settings['path_code_speed'],
-                                       topo, settings['path_cubit'], cineca)
+                                       topo, settings['path_cubit'], cineca, path_data)
 
             if calculation_mode == '--post':
                 speed2ascii(folder, sites)

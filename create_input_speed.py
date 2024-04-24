@@ -1,4 +1,4 @@
-def create_input_speed_run(folder, layers, fault, computational_param, sites, path_code, topo, path_cubit, cineca):
+def create_input_speed_run(folder, layers, fault, computational_param, sites, path_code, topo, path_cubit, cineca, path_data):
     import os
     from rapids.create_input_speed_files import create_input_mate
     from rapids.create_input_speed_files import create_input_LS
@@ -25,7 +25,7 @@ def create_input_speed_run(folder, layers, fault, computational_param, sites, pa
     create_input_mate(folder, computational_param, layers, fault)
 
     cubit_journal, file_exodus_mesh, file_exodus_topo = create_mesh(folder, computational_param, layers, fault, sites,
-                                                                    topo, path_cubit)
+                                                                    topo, path_cubit, path_data)
     command_cubit_jou = path_cubit + ' -nographics python3 ' + cubit_journal
     os.system(command_cubit_jou)
 
