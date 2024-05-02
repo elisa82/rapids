@@ -285,3 +285,12 @@ def create_stations(folder, sites, fault):
         fid.write('{} {} {}\n'.format(sites['lon'][k], sites['lat'][k], sites['ID'][k]))
     fid.close()
     return
+
+def create_script_ucsb_source(folder, path_code_hisada):
+    fid = open(folder +'/script_ucsb_source.sh', 'w')
+    fid.write('#!/bin/bash\n')
+    #fid.write('"'+path_code_ucsb+'/phs3sQ_slip_vr.out" < ph.dat\n')
+    #fid.write('"'+path_code_ucsb+'/grflt12s_slip_vr_subf.out" < gr.dat\n')
+    #fid.write('"'+path_code_ucsb+'/grfftspmm.out" < grspm.dat\n')
+    #fid.close()
+    return
