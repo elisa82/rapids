@@ -63,7 +63,7 @@ class GMPE(metaclass=_abc.ABCMeta):
         File has to be stored in the same directory of the GMPE class.
         """
         full_path = _os.path.dirname(__file__)
-        path_file = _os.path.join(full_path, 'data', json_file)
+        path_file = _os.path.join(full_path, 'DATA/GMM', json_file)
 
         self.coeff = {}
         with open(path_file) as jf:

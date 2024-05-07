@@ -23,7 +23,7 @@
 import numpy as _np
 from scipy.constants import g
 
-from base import GMPE
+from rapids.base import GMPE
 
 class BragatoSlejko2005(GMPE):
     """

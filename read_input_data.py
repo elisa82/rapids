@@ -1,3 +1,19 @@
+def compute_maximum_distance(mag):
+    import rapids.bragato_slejko_2005 as bragato_slejko_2005
+    import numpy as np
+
+    #to define threshold and dist according to fragility functions of target structures
+    threshold = 0.01
+
+    dist = 0
+    while dist < 300:
+        mean, stdv = bragato_slejko_2005.BragatoSlejko2005().ground_motion('PGA', mag, dist)
+        if np.exp(mean-stdv) < threshold:
+            break
+        dist += 1
+    return dist
+
+
 def grid_sites(fault, receiver_grid_step_km, receiver_maximum_dist):
     import math
     import numpy as np
@@ -515,9 +531,13 @@ def read_input_data(fileini, code, calculation_mode):
     try:
         receiver_grid_step_km = float(input['site_grid_step_km'])
         try:
-            receiver_maximum_dist = float(input['site_maximum_dist_km'])
+            receiver_maximum_dist = input['site_maximum_dist_km']
+            if receiver_maximum_dist == 'default':
+                distance_max = compute_maximum_distance(fault['Mw'])
+            else:
+                distance_max = float(receiver_maximum_dist)
             receivers_lon, receivers_lat, receivers_depth, receivers_ID = \
-                grid_sites(fault, receiver_grid_step_km, receiver_maximum_dist)
+                grid_sites(fault, receiver_grid_step_km, distance_max)
         except KeyError:
             receiver_maximum_dist_N = float(input['site_maximum_dist_km_N'])
             receiver_maximum_dist_S = float(input['site_maximum_dist_km_S'])
