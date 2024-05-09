@@ -164,12 +164,25 @@ def define_missing_parameters(code, layers, fault, computational_param, path_dat
     if layers['vel_model'] == 'GNDT_14':
         vel_model_file = path_data + '/VelModel/GNDT/m550014.stp'
         profile = np.loadtxt(vel_model_file, skiprows=1)
-        layers['thk'] = profile[:, 0]
-        layers['rho'] = profile[:, 1]
-        layers['vp'] = profile[:, 2]
-        layers['vs'] = profile[:, 3]
-        layers['qp'] = profile[:,4]
-        layers['qs'] = profile[:,5]
+        thk = profile[:, 0]
+        rho = profile[:, 1]
+        vp = profile[:, 2]
+        vs = profile[:, 3]
+        qp = profile[:,4]
+        qs = profile[:,5]
+        depth_gndt = 0
+        for i in range(len(thk)):
+            depth_gndt = depth_gndt + thk[i]
+            if depth_gndt > 80: #Deve essere limitato in lunghezza altrimenti da' segmentation fault nel calcolo GF. Ho deciso di prendere il modello fino a circa 80 km di depth (il layer subito dopo 80 km, ma èuna mia scelta)
+                layer_number = i
+                break
+
+        layers['thk'] = thk[0:layer_number+1]
+        layers['rho'] = rho[0:layer_number+1]
+        layers['vp'] = vp[0:layer_number+1]
+        layers['vs'] = vs[0:layer_number+1]
+        layers['qp'] = qp[0:layer_number+1]
+        layers['qs'] = qs[0:layer_number+1]
 
     elif layers['vel_model'] == 'NAC_1D_Friuli':
         vel_model_file = path_data + '/VelModel/friuli_1D.xyz'
