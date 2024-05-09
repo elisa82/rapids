@@ -161,7 +161,17 @@ def define_missing_parameters(code, layers, fault, computational_param, path_dat
     from rapids.conversions import determine_fault_coordinates_from_hypocentre, create_vertex, create_vertex_utm
     from rapids.conversions import utm_to_lon_lat
 
-    if layers['vel_model'] == 'NAC_1D_Friuli':
+    if layers['vel_model'] == 'GNDT_14':
+        vel_model_file = path_data + '/VelModel/GNDT/m550014.stp'
+        profile = np.loadtxt(vel_model_file, skiprows=1)
+        layers['thk'] = profile[:, 0]
+        layers['rho'] = profile[:, 1]
+        layers['vp'] = profile[:, 2]
+        layers['vs'] = profile[:, 3]
+        layers['qp'] = profile[:,4]
+        layers['qs'] = profile[:,5]
+
+    elif layers['vel_model'] == 'NAC_1D_Friuli':
         vel_model_file = path_data + '/VelModel/friuli_1D.xyz'
         profile = np.loadtxt(vel_model_file, skiprows=3)
         z = profile[:, 0]
@@ -203,11 +213,6 @@ def define_missing_parameters(code, layers, fault, computational_param, path_dat
         layers['vs'] = np.asarray(vs_grouped)
         layers['rho'] = np.asarray(rho_grouped)
         layers['thk'] = np.asarray(thk_grouped)
-
-        print(layers['vp'])
-        print(layers['vs'])
-        print(layers['rho'])
-        print(layers['thk'])
 
     else:
         if layers['rho'] is None:
