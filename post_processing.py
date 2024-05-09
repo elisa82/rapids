@@ -447,7 +447,11 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
             label_map = 'PGA (' + unit_measure + ')'
         #for iobs in range(1):
         for iobs in range(len(sites['Z'])):
-            for isource in range(1, computational_param['realizations']+1):
+            if fault['IDx'] == 'Yoffe-DCF':
+                num_realizations = 1
+            else:
+                num_realizations = computational_param['realizations']
+            for isource in range(1, num_realizations+1):
                 handles_tag = []
                 plot_file = folder_plot + '/' + str(sites['ID'][iobs]) + "_" + code + "." + ext_out + '_' + \
                         str(isource).zfill(3) + ".png"
