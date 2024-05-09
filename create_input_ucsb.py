@@ -37,7 +37,7 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
             os.system('cp ../model.vel model_lf.vel')
             if green == 'green':
                 create_Green(folder_LF, computational_param, fault, sites, 'LF')
-                create_script_GF(folder_LF)
+                #create_script_GF(folder_LF)
                 command = 'mpirun -np 480 ' + path_code_ucsb_green_LF + '/gfbank_mpi'
                 os.system(command)
                 os.system('mv model.green_LF.inf Green_Bank.inf')
