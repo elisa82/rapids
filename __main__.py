@@ -79,7 +79,7 @@ if __name__ == '__main__':
 
             if calculation_mode == '--post':
                 #questo va rivisto x le due condizioni HF e LF che ora non sono contemplate
-                post_processing(folder, plot_param, 'stitched-ucsb', sites, fault, computational_param)
+                post_processing(folder, plot_param, 'ucsb', sites, fault, computational_param)
 
         if code == 'speed':
             if calculation_mode == '--input':
