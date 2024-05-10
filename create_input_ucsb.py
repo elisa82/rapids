@@ -46,7 +46,6 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
             else:
                 os.system('cp ../Source.001 .')
             subprocess.call([path_code + '/syn_1d'])
-            os.system(command)
         if 'HF' in band_freq:
             folder_HF = folder + '/HF'
             if not os.path.exists(folder_HF):
