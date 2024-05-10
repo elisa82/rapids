@@ -407,7 +407,7 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
         os.makedirs(folder_plot)
 
     folder_hisada = output_folder + '/HISADA'
-    folder_ucsb = output_folder + '/UCSB/LF'
+    folder_ucsb = output_folder + '/UCSB/HF'
     folder_speed = output_folder + '/SPEED'
     folder_stitched_ucsb = output_folder + '/UCSB/STITCHED'
     folder_stitched_speeducsb = output_folder + '/STITCHED'
