@@ -105,6 +105,9 @@ def create_computational_param():
     abso_bound_dist_km = None
     freq_join = None
     realizations = 1
+    mesh = None
+    gf = None
+    freq_band_gf = None
     computational_param = {
         "dt_ucsb": dt_ucsb,
         "dt_speed": dt_speed,
@@ -131,7 +134,10 @@ def create_computational_param():
         "seed": seed,
         "abso_bound_dist_km": abso_bound_dist_km,
         "freq_join": freq_join,
-        "realizations": realizations
+        "realizations": realizations,
+        "mesh": mesh,
+        "gf": gf,
+        "freq_band_gf": freq_band_gf
     }
     return computational_param
 
@@ -479,7 +485,12 @@ def read_input_data(fileini, code, calculation_mode):
     computational_param = create_computational_param()
     #computational_param['output_type'] = input['type_output']
 
+    if 'ucsb' in code:
+        computational_param['gf'] = input['gf']
+        computational_param['freq_band_gf'] = input['freq_band_gf']
+
     if 'speed' in code:
+        computational_param['mesh'] = input['mesh']
         computational_param['spectral_degree'] = int(input['spectral_degree'])  # ordine spettrale 4 significa 5 integration
         # points along each direction. Cambia il numero di integration points nella mesh, dentro ogni elemento. 4 divisioni
         computational_param['fval_quality_factor'] = float(input['fval_quality_factor'])
@@ -591,7 +602,7 @@ def read_input_data(fileini, code, calculation_mode):
                              receivers_lon, receivers_lat)
 
     plot_param = create_plot_param()
-    if calculation_mode == '--post' or calculation_mode == '--run' or calculation_mode == '--stitch' or calculation_mode == '--run-nogreen':
+    if calculation_mode == '--post' or calculation_mode == '--run' or calculation_mode == '--stitch':
         try:
             plot_param['fmin_filter'] = float(input['fmin_filter'])
         except KeyError:

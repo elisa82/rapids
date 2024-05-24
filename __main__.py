@@ -16,6 +16,10 @@ from rapids.conversions import speed2sac, speed2ascii
 #Di default SPEED è in spostamento e MS-DWS in accelerazione!!!
 #Tutto il resto in velocità!!!!
 
+#freq_band_gf = [HF/LF/LFHF/HFLF]
+#mesh = [yes/no]
+#gf = [yes/no]
+
 if __name__ == '__main__':
 
     # %% Initial setup
@@ -28,108 +32,96 @@ if __name__ == '__main__':
         sys.exit('usage:\n'
             'python3 -m rapids #input_file [code] [mode]')
 
-    if fileini == '--nrt':
-        write('TO DO')
-    else:
+    #read settings
+    settings = read_settings('settings.ini')
 
-        if code == 'ucsb':
-            green = 'nogreen'
-            freq_band = []
-            if calculation_mode == '--run' or calculation_mode == '--seis':
-                try:
-                    green = sys.argv[4]
-                    freq_band = sys.argv[5]
-                except IndexError:
-                    sys.exit('usage:\n'
-                        'python3 -m rapids #input_file ucsb --run [green/nogreen] [HF/LF/LFHF/HFLF]')
+    path_data = settings['path_data']
 
-        #read settings
-        settings = read_settings('settings.ini')
+    # read input file
+    [layers, fault, computational_param, sites, plot_param, topo, folder, cineca] = \
+        read_input_data(fileini, code, calculation_mode)
 
-        path_data = settings['path_data']
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    fault, layers = define_missing_parameters(code, layers, fault, computational_param, path_data, topo, folder, sites)
 
-        # read input file
-        [layers, fault, computational_param, sites, plot_param, topo, folder, cineca] = \
-            read_input_data(fileini, code, calculation_mode)
+    if code == 'hisada':
+        if calculation_mode == '--input':
+            create_input_hisada_run(folder, layers, fault, computational_param, sites, settings['path_code_hisada'], path_data)
 
-        if not os.path.exists(folder):
-            os.makedirs(folder)
-        fault, layers = define_missing_parameters(code, layers, fault, computational_param, path_data, topo, folder, sites)
+    if code == 'ucsb':
+        path_code_ucsb_green_HF = settings['path_code_ucsb_green_HF']
+        path_code_ucsb_green_LF = settings['path_code_ucsb_green_LF']
+        if fault['IDx'] == 'Yoffe-DCF':
+            path_code_ucsb = settings['path_code_ucsb_Yoffe']
+        else:
+            path_code_ucsb = settings['path_code_ucsb']
 
-        if code == 'hisada':
-            if calculation_mode == '--input':
-                create_input_hisada_run(folder, layers, fault, computational_param, sites, settings['path_code_hisada'], path_data)
+        if calculation_mode != '--post':
 
-        if code == 'ucsb':
-            path_code_ucsb_green_HF = settings['path_code_ucsb_green_HF']
-            path_code_ucsb_green_LF = settings['path_code_ucsb_green_LF']
-            if fault['IDx'] == 'Yoffe-DCF':
-                path_code_ucsb = settings['path_code_ucsb_Yoffe']
-            else:
-                path_code_ucsb = settings['path_code_ucsb']
+            if computational_param['gf'] == 'yes':
+                green = 'green'
+            if computational_param['gf'] == 'no':
+                green = 'nogreen'
+            freq_band = computational_param['freq_band_gf']
+            create_input_ucsb_run(folder, layers, fault, computational_param, sites, path_code_ucsb,
+                                path_code_ucsb_green_HF, path_code_ucsb_green_LF, calculation_mode, green, freq_band, 
+                                path_data)
 
-            if calculation_mode != '--post':
+        if calculation_mode == '--run':
+            if 'LF' in computational_param['freq_band_gf'] and 'HF' in computational_param['freq_band_gf']:
+                num_sm = 1
+                stitch(folder, path_code_ucsb, computational_param, fault, sites, num_sm, code)
+                post_processing(folder, plot_param, 'stitched-ucsb', sites, fault, computational_param, path_data)
 
-                create_input_ucsb_run(folder, layers, fault, computational_param, sites, path_code_ucsb,
-                                    path_code_ucsb_green_HF, path_code_ucsb_green_LF, calculation_mode, green, freq_band, 
-                                    path_data)
+        if calculation_mode == '--post':
+            #questo va rivisto x le due condizioni HF e LF che ora non sono contemplate
+            post_processing(folder, plot_param, 'ucsb', sites, fault, computational_param, path_data)
 
-            if calculation_mode == '--run':
-                if 'LF' in freq_band and 'HF' in freq_band:
-                    num_sm = 1
-                    stitch(folder, path_code_ucsb, computational_param, fault, sites, num_sm, code)
-                    post_processing(folder, plot_param, 'stitched-ucsb', sites, fault, computational_param, path_data)
-
-            if calculation_mode == '--post':
-                #questo va rivisto x le due condizioni HF e LF che ora non sono contemplate
-                post_processing(folder, plot_param, 'ucsb', sites, fault, computational_param, path_data)
-
-        if code == 'speed':
-            if calculation_mode == '--input':
-                if fault['slip_mode'] == 'Archuleta':
-                    if fault['IDx'] == 'Yoffe-DCF':
-                        path_code_ucsb = settings['path_code_ucsb_Yoffe']
-                    else:
-                        path_code_ucsb = settings['path_code_ucsb']
-                    if not os.path.exists(folder + '/UCSB'):
-                        green = 'nogreen'
-                        band_freq = []
-                        create_input_ucsb_run(folder, layers, fault, computational_param, sites,
-                                          path_code_ucsb, path_code_ucsb_green_HF, path_code_ucsb_green_LF, '--source', green, 
-                                          freq_band, path_data) 
-                create_input_speed_run(folder, layers, fault, computational_param, sites, settings['path_code_speed'],
-                                       topo, settings['path_cubit'], cineca, path_data)
-
-            if calculation_mode == '--post':
-                speed2ascii(folder, sites)
-                post_processing(folder, plot_param, code, sites, fault, computational_param, path_data)
-
-
-        #with open(folder + '/sites.obs', 'w') as f:
-        #    f.write("lon lat\n")
-        #    for line in range(len(sites['lon'])):
-        #            f.write("%10.4f %10.4f\n" % (sites['lon'][line], sites['lat'][line]))
-
-        if calculation_mode == '--stitch':
-
-            if 'speed' in code:
-                speed2ascii(folder, sites)
-
-            if 'ucsb' in code:
-
+    if code == 'speed':
+        if calculation_mode == '--input':
+            if fault['slip_mode'] == 'Archuleta':
                 if fault['IDx'] == 'Yoffe-DCF':
                     path_code_ucsb = settings['path_code_ucsb_Yoffe']
                 else:
                     path_code_ucsb = settings['path_code_ucsb']
-            
-            num_sm = 1
-            stitch(folder, path_code_ucsb, computational_param, fault, sites, num_sm, code)
+                if not os.path.exists(folder + '/UCSB'):
+                    create_input_ucsb_run(folder, layers, fault, computational_param, sites,
+                                      path_code_ucsb, path_code_ucsb_green_HF, path_code_ucsb_green_LF, '--source', 'nogreen', 
+                                      [], path_data) 
+            create_input_speed_run(folder, layers, fault, computational_param, sites, settings['path_code_speed'],
+                                   topo, settings['path_cubit'], cineca, path_data)
 
-            code = 'stitched-'+code
+        if calculation_mode == '--post':
+            speed2ascii(folder, sites)
             post_processing(folder, plot_param, code, sites, fault, computational_param, path_data)
 
-        if calculation_mode == '--post' and code != 'ucsb' and code != 'speed':
-            post_processing(folder, plot_param, code, sites, fault, computational_param, path_data)
+
+    #with open(folder + '/sites.obs', 'w') as f:
+    #    f.write("lon lat\n")
+    #    for line in range(len(sites['lon'])):
+    #            f.write("%10.4f %10.4f\n" % (sites['lon'][line], sites['lat'][line]))
+
+    if calculation_mode == '--stitch':
+
+        if 'speed' in code:
+            speed2ascii(folder, sites)
+
+        if 'ucsb' in code:
+
+            if fault['IDx'] == 'Yoffe-DCF':
+                path_code_ucsb = settings['path_code_ucsb_Yoffe']
+            else:
+                path_code_ucsb = settings['path_code_ucsb']
+        
+        num_sm = 1
+        stitch(folder, path_code_ucsb, computational_param, fault, sites, num_sm, code)
+
+        code = 'stitched-'+code
+        post_processing(folder, plot_param, code, sites, fault, computational_param, path_data)
+
+    if calculation_mode == '--post' and code != 'ucsb' and code != 'speed':
+        post_processing(folder, plot_param, code, sites, fault, computational_param, path_data)
 
 
 # 	HYPO_DOWN_DIP=position_along_width*width
