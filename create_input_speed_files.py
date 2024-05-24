@@ -1077,7 +1077,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
 
     coord1, coord2, coord3, coord4 = define_area(fault, sites, computational_param)
 
-    if topo == 1:
+    if topo == 'yes':
         path_topo = path_data+'/DEM'
         temp1, temp2, zone, letter = determine_utm_coord(fault['hypo']['lon'], fault['hypo']['lat'])
         coord1_lon, coord1_lat = utm_to_lon_lat(coord1[0], coord1[1], zone)
@@ -1117,7 +1117,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     fid.write('{}\n'.format('undo off # hopefully this should improve speed'))
     fid.write('{}\n'.format('graphics off # hopefully this should improve speed'))
     fid.write('{}\n'.format(''))
-    if topo == 1:
+    if topo == 'yes':
         fid.write('{}\n'.format('# Reading topography CUB file, and cropping out the unwanted portion'))
         file_cub = folder_mesh + '/topo.cub'
         # file_stl = folder_mesh + '/topo.stl'
@@ -1130,7 +1130,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
         fid.write('{}\n'.format('compress ids'))
         fid.write('{}\n'.format(''))
 
-    if topo == 0:
+    if topo == 'no':
         fid.write('{} {} {} {}\n'.format('create vertex', coord1[0], coord1[1], -layers['depth_top_layer'] * 1000))
         fid.write('{} {} {} {}\n'.format('create vertex', coord2[0], coord2[1], -layers['depth_top_layer'] * 1000))
         fid.write('{} {} {} {}\n'.format('create vertex', coord3[0], coord3[1], -layers['depth_top_layer'] * 1000))
@@ -1163,7 +1163,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     fid.write('{}\n'.format(''))
     nlayers = len(layers['rho'])
 
-    if topo == 0:
+    if topo == 'no':
         fid.write('{} {}\n'.format('surface 1 copy move x 0 y 0 z', -(layers['depth_top_layer']+layers['thk'][0]) * 1000))  # create first layer alone for consistency with topo procedure
     
     depth_layers = layers['thk'][0] + layers['depth_top_layer']
@@ -1177,7 +1177,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
         vertex_id_1 = j + 1
         for i in range(nlayers):
             vertex_id_2 = vertex_id_1 + 4
-            if topo == 0:
+            if topo == 'no':
                 num1 = vertex_id_1
                 num2 = vertex_id_2
             else:
@@ -1202,7 +1202,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
             else:
                 curve_id_4 = curve_id_3 + (nlayers + 1)
             curve_id_3 = curve_id_3 + 1
-            if topo == 0:
+            if topo == 'no':
                 num1 = curve_id_1
                 num2 = curve_id_2
                 num3 = curve_id_3
@@ -1240,14 +1240,14 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     fid.write('{}\n'.format(''))
     fid.write('{}\n'.format('# Initial Coarse Mesh'))
     mesh_size_from_vel = define_mesh_size(layers, computational_param)
-    if topo == 1:
+    if topo == 'yes':
         resolution_topo = 325  # m corrispondenti a 15 arcsec alle nostre latitudini
         mesh_size = min(mesh_size_from_vel, resolution_topo)
     else:
         mesh_size = mesh_size_from_vel
     print('mesh_size= ', mesh_size)
     fid.write('{} {}\n'.format('volume all size', mesh_size))
-    if topo == 1:
+    if topo == 'yes':
         # note: we will mesh first the topography surface, then sweep down the mesh
         # topography surface
         # cubit.cmd('control skew surface 2')
@@ -1261,7 +1261,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     num1 = 1
     for i in range(nlayers):
         num2 = math.ceil(layers['thk'][i] * 1000 / mesh_size_from_vel)
-        if topo == 1:
+        if topo == 'yes':
             if i > 0:
                 fid.write('{} {} {} {}\n'.format('curve', num1, 'interval', num2))
         else:
@@ -1277,7 +1277,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
 
     command_cub_mesh_before_refinement = 'save as "' + folder_mesh + '/Mesh_before_refinement.cub" overwrite'
     fid.write('{}\n'.format(command_cub_mesh_before_refinement))
-    # if topo == 1:
+    # if topo == 'yes':
     #    fid.write('{}\n'.format('refine surface 2 numsplit 1 bias 1.0 depth 3'))
     fid.write('{}\n'.format('#*************************************'))
     fid.write('{}\n'.format(''))
@@ -1331,7 +1331,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     file_exodus = folder_mesh + '/crustal_model.e'
     fid.write('{}{}{}\n'.format('export mesh "', file_exodus, '" dimension 3 overwrite'))
 
-    if topo == 1:
+    if topo == 'yes':
         fid.write('{}\n'.format(''))
         fid.write('{}\n'.format('# Start topography'))
         fid.write('{}\n'.format('reset'))

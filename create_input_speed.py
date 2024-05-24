@@ -61,7 +61,7 @@ def create_input_speed_run(folder, layers, fault, computational_param, sites, pa
                 precomputed_mesh_label = 'M6.4_1976_05_06_topo.mesh'
             if topo == 'no':
                 precomputed_mesh_label = 'M6.4_1976_05_06_flat.mesh'
-        command_cp_mesh = 'cp '+path_data+'/MESH/crustal_model_'+precomputed_mesh_label+' '+folder+'/crustal_model.mesh'
+        command_cp_mesh = 'cp '+path_data+'/MESH/crustal_model_' + precomputed_mesh_label + ' ' + folder+'/crustal_model.mesh'
         os.system(command_cp_mesh)
 
     create_input_speed_file(folder, computational_param, file_mesh_final)
