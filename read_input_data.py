@@ -36,7 +36,6 @@ def grid_sites(fault, receiver_grid_step_km, receiver_maximum_dist):
     receivers_lon = np.asarray(receivers_lon)
     receivers_lat = np.asarray(receivers_lat)
     receivers_depth = np.zeros((len(receivers_lat)))
-    print(receivers_lon, receivers_lat)
     receivers_ID = []
     for l in range(len(receivers_depth)):
         receivers_ID.append('site' + str(l + 1).zfill(3))
@@ -613,7 +612,7 @@ def read_input_data(fileini, code, calculation_mode):
             plot_param['fmax_filter'] = None
         plot_param['time_max_plot'] = float(input['time_max_plot'])
 
-    topo = int(input['topography'])
+    topo = input['topography']
 
     #STITCHED
     if calculation_mode == '--stitch':

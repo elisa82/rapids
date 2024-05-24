@@ -1,5 +1,5 @@
 def create_input_ucsb_run(folder, layers, fault, computational_param, sites, path_code, path_code_ucsb_green_HF, 
-        path_code_ucsb_green_LF,calculation_mode, green, band_freq, path_data):
+        path_code_ucsb_green_LF,calculation_mode, band_freq, path_data):
     import os
     import subprocess
     from rapids.create_input_ucsb_files import create_input_ffsp
@@ -27,6 +27,11 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
     if calculation_mode == '--seis' or calculation_mode == '--run':
         create_stations(folder, sites, fault)
         create_syn1D(folder, computational_param)
+        if computational_param['gf'] == 'no':
+            if fault['Mw'] == '4.2':
+                GF_precomputed_label = 'M4.2_2024_03_27'
+            if fault['Mw'] == '6.4':
+                GF_precomputed_label = 'M6.4_1976_05_06'
         if 'LF' in band_freq:
             folder_LF = folder + '/HF' #L'ho chiamato HF ma sarebbe il run con la LF
             if not os.path.exists(folder_LF):
@@ -34,11 +39,16 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
             os.chdir(folder_LF)
             os.system('cp ../stations.xy .')
             os.system('cp ../model.vel model_lf.vel')
-            if green == 'green':
+            if computational_param['gf'] == 'yes':
                 create_Green(folder_LF, computational_param, fault, sites, 'LF')
-                command = 'mpirun ' + path_code_ucsb_green_LF + '/gfbank_mpi'
+                command = 'mpirun -480 ' + path_code_ucsb_green_LF + '/gfbank_mpi'
                 os.system(command)
                 os.system('mv model.green_LF.inf Green_Bank.inf')
+            if computational_param['gf'] == 'no':
+                command_cp_GF = 'cp '+path_data+'/GF/model.green_LF_'+GF_precomputed_label+' model.green_LF'
+                command_cp_GF_info = 'cp '+path_data+'/GF/Green_Bank_LF.inf_'+GF_precomputed_label+' Green_Bank.inf'
+                os.system(command_cp_GF)
+                os.system(command_cp_GF_info)
             os.system('cp ../syn_1d.inp .')
             os.system('cp ../source_model.list .')
             if fault['IDx'] == 'Yoffe-DCF':
@@ -53,12 +63,17 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
             os.chdir(folder_HF)
             os.system('cp ../stations.xy .')
             os.system('cp ../model.vel target.vel')
-            if green == 'green':
+            if computational_param['gf'] == 'yes':
                 create_Green(folder_HF, computational_param, fault, sites, 'HF')
                 create_model_HF(folder_HF, layers)
                 command = 'mpirun -np 1 ' + path_code_ucsb_green_HF + '/gfbank_mpi'
                 os.system(command)
                 os.system('mv model.green_HF.inf Green_Bank.inf')
+            if computational_param['gf'] == 'no':
+                command_cp_GF = 'cp DATA/GF/model.green_HF_',GF_precomputed_label,' model.green_HF'
+                command_cp_GF_info = 'cp DATA/GF/Green_Bank_HF.inf_',GF_precomputed_label,' Green_Bank.inf'
+                os.system(command_cp_GF)
+                os.system(command_cp_GF_info)
             os.system('cp ../syn_1d.inp .')
             os.system('cp ../source_model.list .')
             if fault['IDx'] == 'Yoffe-DCF':
