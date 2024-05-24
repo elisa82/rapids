@@ -36,7 +36,7 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
             os.system('cp ../model.vel model_lf.vel')
             if green == 'green':
                 create_Green(folder_LF, computational_param, fault, sites, 'LF')
-                command = 'mpirun -np 480 ' + path_code_ucsb_green_LF + '/gfbank_mpi'
+                command = 'mpirun ' + path_code_ucsb_green_LF + '/gfbank_mpi'
                 os.system(command)
                 os.system('mv model.green_LF.inf Green_Bank.inf')
             os.system('cp ../syn_1d.inp .')
@@ -56,7 +56,7 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
             if green == 'green':
                 create_Green(folder_HF, computational_param, fault, sites, 'HF')
                 create_model_HF(folder_HF, layers)
-                command = 'mpirun -np 480 ' + path_code_ucsb_green_HF + '/gfbank_mpi'
+                command = 'mpirun -np 1 ' + path_code_ucsb_green_HF + '/gfbank_mpi'
                 os.system(command)
                 os.system('mv model.green_HF.inf Green_Bank.inf')
             os.system('cp ../syn_1d.inp .')

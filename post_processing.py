@@ -1,4 +1,191 @@
 #!/usr/bin/python3
+def strtoint(sf):
+    """
+
+    """
+    try:
+        x = int(sf)
+    except ValueError:
+        return None
+    return x
+
+
+def strtofloat(sf):
+    """
+    """
+    try:
+        x = float(sf)
+    except ValueError:
+        return None
+    return x
+
+def to_utc_date_time(value):
+    """
+    """
+    from obspy.core import UTCDateTime
+
+    try:
+        date, time = value.split('_')
+    except ValueError:
+        date = value
+
+    year = int(date[0:4])
+    month = int(date[4:6])
+    day = int(date[6:8])
+
+    hour = int(time[0:2])
+    mins = int(time[2:4])
+    secs = float(time[4:])
+
+    return UTCDateTime(year, month, day, hour, mins) + secs
+
+def read_esm(filename_in):
+
+    # Import libraries
+    from obspy.core import Stats
+    import numpy as np
+
+    headers = {}
+
+    # read file
+    fh = open(filename_in, 'rt')
+    for j in range(64):
+        key, value = fh.readline().strip().split(':', 1)
+        headers[key.strip()] = value.strip()
+
+    header = Stats()
+
+    header['dyna'] = {}
+
+    header['network'] = headers['NETWORK']
+    header['station'] = headers['STATION_CODE']
+    header['location'] = headers['LOCATION']
+    header['channel'] = headers['STREAM']
+    try:
+        # use toUTCDateTime to convert from DYNA format
+        header['starttime'] \
+            = to_utc_date_time(headers
+                                ['DATE_TIME_FIRST_SAMPLE_YYYYMMDD_HHMMSS'])
+    except ValueError:
+        header['starttime'] = to_utc_date_time('19700101_000000')
+    header['sampling_rate'] = 1 / float(headers['SAMPLING_INTERVAL_S'])
+    header['delta'] = float(headers['SAMPLING_INTERVAL_S'])
+    header['npts'] = int(headers['NDATA'])
+    header['calib'] = 1  # not in file header
+
+    # DYNA dict float data
+    header['dyna']['EVENT_LATITUDE_DEGREE'] = strtofloat(
+        headers['EVENT_LATITUDE_DEGREE'])
+    header['dyna']['EVENT_LONGITUDE_DEGREE'] = strtofloat(
+        headers['EVENT_LONGITUDE_DEGREE'])
+    header['dyna']['EVENT_DEPTH_KM'] = strtofloat(headers['EVENT_DEPTH_KM'])
+    header['dyna']['HYPOCENTER_REFERENCE'] = headers['HYPOCENTER_REFERENCE']
+    header['dyna']['MAGNITUDE_W'] = strtofloat(headers['MAGNITUDE_W'])
+    header['dyna']['MAGNITUDE_L'] = strtofloat(headers['MAGNITUDE_L'])
+    header['dyna']['STATION_LATITUDE_DEGREE'] = strtofloat(
+        headers['STATION_LATITUDE_DEGREE'])
+    header['dyna']['STATION_LONGITUDE_DEGREE'] = strtofloat(
+        headers['STATION_LONGITUDE_DEGREE'])
+    header['dyna']['VS30_M_S'] = strtofloat(headers['VS30_M/S'])
+    header['dyna']['EPICENTRAL_DISTANCE_KM'] = strtofloat(
+        headers['EPICENTRAL_DISTANCE_KM'])
+    header['dyna']['EARTHQUAKE_BACKAZIMUTH_DEGREE'] = strtofloat(
+        headers['EARTHQUAKE_BACKAZIMUTH_DEGREE'])
+    header['dyna']['DURATION_S'] = strtofloat(headers['DURATION_S'])
+    header['dyna']['INSTRUMENTAL_FREQUENCY_HZ'] = strtofloat(
+        headers['INSTRUMENTAL_FREQUENCY_HZ'])
+    header['dyna']['INSTRUMENTAL_DAMPING'] = strtofloat(
+        headers['INSTRUMENTAL_DAMPING'])
+    header['dyna']['FULL_SCALE_G'] = strtofloat(headers['FULL_SCALE_G'])
+
+    # data type is acceleration
+    if headers['DATA_TYPE'] == "ACCELERATION" \
+            or headers['DATA_TYPE'] == "ACCELERATION RESPONSE SPECTRUM":
+        header['dyna']['PGA_CM_S_2'] = strtofloat(headers['PGA_CM/S^2'])
+        header['dyna']['TIME_PGA_S'] = strtofloat(headers['TIME_PGA_S'])
+    # data type is velocity
+    if headers['DATA_TYPE'] == "VELOCITY" \
+            or headers['DATA_TYPE'] == "PSEUDO-VELOCITY RESPONSE SPECTRUM":
+        header['dyna']['PGV_CM_S'] = strtofloat(headers['PGV_CM/S'])
+        header['dyna']['TIME_PGV_S'] = strtofloat(headers['TIME_PGV_S'])
+    # data type is displacement
+    if headers['DATA_TYPE'] == "DISPLACEMENT" \
+            or headers['DATA_TYPE'] == "DISPLACEMENT RESPONSE SPECTRUM":
+        header['dyna']['PGD_CM'] = strtofloat(headers['PGD_CM'])
+        header['dyna']['TIME_PGD_S'] = strtofloat(headers['TIME_PGD_S'])
+
+    header['dyna']['LOW_CUT_FREQUENCY_HZ'] = strtofloat(
+        headers['LOW_CUT_FREQUENCY_HZ'])
+    header['dyna']['HIGH_CUT_FREQUENCY_HZ'] = strtofloat(
+        headers['HIGH_CUT_FREQUENCY_HZ'])
+
+    # DYNA dict int data
+    header['dyna']['STATION_ELEVATION_M'] = strtoint(
+        headers['STATION_ELEVATION_M'])
+    header['dyna']['SENSOR_DEPTH_M'] = strtoint(headers['SENSOR_DEPTH_M'])
+    header['dyna']['N_BIT_DIGITAL_CONVERTER'] = strtoint(
+        headers['N_BIT_DIGITAL_CONVERTER'])
+    header['dyna']['FILTER_ORDER'] = strtoint(headers['FILTER_ORDER'])
+
+    # DYNA dict string data
+    header['dyna']['EVENT_NAME'] = headers['EVENT_NAME']
+    header['dyna']['EVENT_ID'] = headers['EVENT_ID']
+    header['dyna']['EVENT_DATE_YYYYMMDD'] = headers['EVENT_DATE_YYYYMMDD']
+    header['dyna']['EVENT_TIME_HHMMSS'] = headers['EVENT_TIME_HHMMSS']
+    header['dyna']['MAGNITUDE_W_REFERENCE'] = headers[
+        'MAGNITUDE_W_REFERENCE']
+    header['dyna']['MAGNITUDE_L_REFERENCE'] = headers[
+        'MAGNITUDE_L_REFERENCE']
+    header['dyna']['FOCAL_MECHANISM'] = headers['FOCAL_MECHANISM']
+    header['dyna']['STATION_NAME'] = headers['STATION_NAME']
+    header['dyna']['SITE_CLASSIFICATION_EC8'] = headers[
+        'SITE_CLASSIFICATION_EC8']
+    header['dyna']['MORPHOLOGIC_CLASSIFICATION'] = headers[
+        'MORPHOLOGIC_CLASSIFICATION']
+    header['dyna']['DATE_TIME_FIRST_SAMPLE_PRECISION'] = headers[
+        'DATE_TIME_FIRST_SAMPLE_PRECISION']
+    header['dyna']['UNITS'] = headers['UNITS']
+    header['dyna']['INSTRUMENT'] = headers['INSTRUMENT']
+    header['dyna']['INSTRUMENT_ANALOG_DIGITAL'] = headers[
+        'INSTRUMENT_ANALOG/DIGITAL']
+    header['dyna']['BASELINE_CORRECTION'] = headers['BASELINE_CORRECTION']
+    header['dyna']['FILTER_TYPE'] = headers['FILTER_TYPE']
+    header['dyna']['LATE_NORMAL_TRIGGERED'] = headers[
+        'LATE/NORMAL_TRIGGERED']
+    header['dyna']['HEADER_FORMAT'] = headers['HEADER_FORMAT']
+    header['dyna']['DATABASE_VERSION'] = headers['DATABASE_VERSION']
+    header['dyna']['DATA_TYPE'] = headers['DATA_TYPE']
+    header['dyna']['PROCESSING'] = headers['PROCESSING']
+    header['dyna']['DATA_LICENSE'] = headers['DATA_LICENSE']
+    header['dyna']['DATA_TIMESTAMP_YYYYMMDD_HHMMSS'] = headers[
+        'DATA_TIMESTAMP_YYYYMMDD_HHMMSS']
+    header['dyna']['DATA_CITATION'] = headers['DATA_CITATION']
+    header['dyna']['DATA_CREATOR'] = headers['DATA_CREATOR']
+    header['dyna']['ORIGINAL_DATA_MEDIATOR_CITATION'] = headers[
+        'ORIGINAL_DATA_MEDIATOR_CITATION']
+    header['dyna']['ORIGINAL_DATA_MEDIATOR'] = headers[
+        'ORIGINAL_DATA_MEDIATOR']
+    header['dyna']['ORIGINAL_DATA_CREATOR_CITATION'] = headers[
+        'ORIGINAL_DATA_CREATOR_CITATION']
+    header['dyna']['ORIGINAL_DATA_CREATOR'] = headers[
+        'ORIGINAL_DATA_CREATOR']
+    header['dyna']['USER1'] = headers['USER1']
+    header['dyna']['USER2'] = headers['USER2']
+    header['dyna']['USER3'] = headers['USER3']
+    header['dyna']['USER4'] = headers['USER4']
+    header['dyna']['USER5'] = headers['USER5']
+
+    # read data
+    acc_data = np.loadtxt(fh, dtype='float32')
+    fh.close()
+
+    time = []
+    for j in range(0, header['npts']):
+        t = j * header['delta']
+        time.append(t)
+
+    return time, np.asarray(acc_data)
+
 def create_single_map(peak_all, minlon, maxlon, minlat, maxlat, comp, bounds, fault, label):
     import matplotlib.pylab as plt
     import numpy as np
@@ -242,6 +429,7 @@ def define_selected_time_history(selected_code, folder_simulation, nobs, desired
     import numpy as np
     from obspy.core import read
     from rapids.conversions import write_uscb_format
+    import glob
 
     output_type = 'vel'
 
@@ -352,6 +540,22 @@ def define_selected_time_history(selected_code, folder_simulation, nobs, desired
         sig_acc = compute_derivative(sig_vel, dt)
         sig_disp = compute_integral(sig_vel, dt)
 
+    if selected_code == 'esm':
+        event = '20240327_0000228'
+        tshift = 20
+        if comp == 'NS':
+            filename_in = glob.glob(folder_simulation+'/*'+sites['ID'][nobs]+'..HHN.D.INT-*.ACC.MP.ASC')
+        if comp == 'EW':
+            filename_in = glob.glob(folder_simulation+'/*'+sites['ID'][nobs]+'..HHE.D.INT-*.ACC.MP.ASC')
+        if comp == 'Z':
+            filename_in = glob.glob(folder_simulation+'/*'+sites['ID'][nobs]+'..HHZ.D.INT-*.ACC.MP.ASC')
+        time, sig_acc = read_esm(filename_in[0])
+        dt = time[1]-time[0]
+        for i in range(len(time)):
+            time[i] = time[i] - 17
+        sig_vel = compute_integral(sig_acc, dt)
+        sig_disp = compute_integral(sig_vel, dt)
+
     if desired_output == 0:
         sig = sig_disp
         #sig = sig - np.mean(sig)
@@ -396,7 +600,7 @@ def prepare_signal(sig, dt, fmin, fmax):
     signal_fft, xf = do_fft(signal_filtered, dt)
     return signal_filtered, signal_fft, xf
 
-def post_processing(output_folder, plot_param, code, sites, fault, computational_param):
+def post_processing(output_folder, plot_param, code, sites, fault, computational_param, path_data):
     import matplotlib.pylab as plt
     import numpy as np
     import os
@@ -414,6 +618,7 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
     folder_msdwn = output_folder + '/MS-DWN'
     folder_ms = output_folder + '/MS'
     folder_dwn = output_folder + '/DWN'
+    folder_esm = path_data + '/ESM'
 
     fmin = plot_param['fmin_filter']
     fmax = plot_param['fmax_filter']
@@ -427,6 +632,7 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
     for j in range(3):
         peaks_hisada = np.zeros((len(sites['ID']), 7))
         peaks_speed = np.zeros((len(sites['ID']), 7))
+        peaks_esm = np.zeros((len(sites['ID']), 7))
         peaks_ucsb = np.zeros((len(sites['ID']), 7))
         peaks_stitched_ucsb = np.zeros((len(sites['ID']), 7))
         peaks_stitched_speeducsb = np.zeros((len(sites['ID']), 7))
@@ -456,7 +662,7 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                 plot_file = folder_plot + '/' + str(sites['ID'][iobs]) + "_" + code + "." + ext_out + '_' + \
                         str(isource).zfill(3) + ".png"
                 plt.figure(100 * j + iobs)
-                for jj in range(8):
+                for jj in range(9):
                     if jj == 0:
                         if 'hisada' in code:
                             selected_code = 'hisada'
@@ -476,7 +682,7 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                             peaks_hisada[iobs, 3: 7] = peaks
                         else:
                             pass
-                    if jj == 1:
+                    if jj == 8:
                         if 'speed' in code and 'stitched' not in code:
                             selected_code = 'speed'
                             folder_simulation = folder_speed
@@ -500,7 +706,7 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                             selected_code = 'ucsb'
                             folder_simulation = folder_ucsb
                             label_code = 'UCSB'
-                            col = 'g'
+                            col = 'k'
                             if fmax is not None and computational_param['fmax_ucsb'] < fmax:
                                 fmax_ucsb = computational_param['fmax_ucsb']
                             else:
@@ -602,6 +808,22 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                             peaks_dwn[iobs, 2] = sites['lat'][iobs]
                         else:
                             pass
+                    if jj == 1:
+                        if 'esm' in code:
+                            selected_code = 'esm'
+                            label_code = 'recorded'
+                            folder_simulation = folder_esm
+                            col = 'r'
+                            fmax_esm = fmax
+                            line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                                                              sites, label_code, col, fmin, fmax_esm, isource)
+                            handles_tag.append(line_name)
+                            peaks_esm[iobs, 3: 7] = peaks
+                            peaks_esm[iobs, 0] = iobs+1
+                            peaks_esm[iobs, 1] = sites['lon'][iobs]
+                            peaks_esm[iobs, 2] = sites['lat'][iobs]
+                        else:
+                            pass
 
 
                 plt.subplot(321)
@@ -633,7 +855,7 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                 plt.savefig(plot_file)
                 plt.close('')
 
-        for icode in range(8):
+        for icode in range(9):
             #site_number lon lat peak_NS peak_EW peak_Z
             if icode == 0:
                 if 'hisada' in code:
@@ -715,5 +937,14 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                 else:
                     pass
 
+            if icode == 8:
+                if 'esm' in code:
+                    selected_code = 'esm'
+                    file_peaks = folder_plot + '/peaks_'+ selected_code + "." + ext_out + '.txt'
+                    np.savetxt(file_peaks, peaks_esm, fmt=fmt)
+                    plot_file_map = folder_plot + '/' + selected_code + "." + ext_out + ".png"
+                    create_figure_3plots(peaks_esm, fault, sites, label_map, j, plot_file_map)
+                else:
+                    pass
 
 # https://sourcespec.readthedocs.io/en/latest/_modules/spectrum.html

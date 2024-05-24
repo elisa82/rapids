@@ -51,7 +51,10 @@ if __name__ == '__main__':
         # read input file
         [layers, fault, computational_param, sites, plot_param, topo, folder, cineca] = \
             read_input_data(fileini, code, calculation_mode)
-        fault, layers = define_missing_parameters(code, layers, fault, computational_param, path_data, topo)
+
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        fault, layers = define_missing_parameters(code, layers, fault, computational_param, path_data, topo, folder, sites)
 
         if code == 'hisada':
             if calculation_mode == '--input':
@@ -75,11 +78,11 @@ if __name__ == '__main__':
                 if 'LF' in freq_band and 'HF' in freq_band:
                     num_sm = 1
                     stitch(folder, path_code_ucsb, computational_param, fault, sites, num_sm, code)
-                    post_processing(folder, plot_param, 'stitched-ucsb', sites, fault, computational_param)
+                    post_processing(folder, plot_param, 'stitched-ucsb', sites, fault, computational_param, path_data)
 
             if calculation_mode == '--post':
                 #questo va rivisto x le due condizioni HF e LF che ora non sono contemplate
-                post_processing(folder, plot_param, 'ucsb', sites, fault, computational_param)
+                post_processing(folder, plot_param, 'ucsb', sites, fault, computational_param, path_data)
 
         if code == 'speed':
             if calculation_mode == '--input':
@@ -99,7 +102,7 @@ if __name__ == '__main__':
 
             if calculation_mode == '--post':
                 speed2ascii(folder, sites)
-                post_processing(folder, plot_param, code, sites, fault, computational_param)
+                post_processing(folder, plot_param, code, sites, fault, computational_param, path_data)
 
 
         #with open(folder + '/sites.obs', 'w') as f:
@@ -123,7 +126,10 @@ if __name__ == '__main__':
             stitch(folder, path_code_ucsb, computational_param, fault, sites, num_sm, code)
 
             code = 'stitched-'+code
-            post_processing(folder, plot_param, code, sites, fault, computational_param)
+            post_processing(folder, plot_param, code, sites, fault, computational_param, path_data)
+
+        if calculation_mode == '--post' and code != 'ucsb' and code != 'speed':
+            post_processing(folder, plot_param, code, sites, fault, computational_param, path_data)
 
 
 # 	HYPO_DOWN_DIP=position_along_width*width

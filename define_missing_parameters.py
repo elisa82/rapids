@@ -1,11 +1,67 @@
+def define_area_NAC1D(fault, sites, computational_param):
+    buffer = 0.01 
+    for i in range(2):
+        if i == 0:
+            str_coord = 'lon'
+        else:
+            str_coord = 'lat'
+        min_val = min(sites[str_coord])
+        max_val = max(sites[str_coord])
+        min_val = min(min_val, fault['hypo'][str_coord])
+        max_val = max(max_val, fault['hypo'][str_coord])
+
+        if fault['vertex']['pbl'][str_coord] > max_val:
+            max_val = fault['vertex']['pbl'][str_coord]
+        if fault['vertex']['pbr'][str_coord] > max_val:
+            max_val = fault['vertex']['pbr'][str_coord]
+        if fault['vertex']['ptr'][str_coord] > max_val:
+            max_val = fault['vertex']['ptr'][str_coord]
+        if fault['vertex']['ptl'][str_coord] > max_val:
+            max_val = fault['vertex']['ptl'][str_coord]
+
+        if str_coord == 'lon':
+            maxlon = max_val + buffer
+        else:
+            maxlat = max_val + buffer
+
+        if fault['vertex']['pbl'][str_coord] < min_val:
+            min_val = fault['vertex']['pbl'][str_coord]
+        if fault['vertex']['pbr'][str_coord] < min_val:
+            min_val = fault['vertex']['pbr'][str_coord]
+        if fault['vertex']['ptr'][str_coord] < min_val:
+            min_val = fault['vertex']['ptr'][str_coord]
+        if fault['vertex']['ptl'][str_coord] < min_val:
+            min_val = fault['vertex']['ptl'][str_coord]
+        if str_coord == 'lon':
+            minlon = min_val - buffer
+        else:
+            minlat = min_val - buffer
+
+    return minlon, maxlon, minlat, maxlat
+
+
 def compute_vs_average_on_fault(fault, layers):
     import numpy as np
     #nsuby = fault['number_subfaults_dip']
     #nsubx = fault['number_subfaults_strike']
     nsuby = 100
     nsubx = 200
-    vs = layers['vs']
-    thickness = list(layers['thk'])
+    vs = []
+    thickness = []
+    if layers['depth_top_layer'] < 0:
+        for i in range(len(layers['thk'])):
+            if i == 0:
+                depth_top = layers['depth_top_layer']
+            else:
+                depth_top += layers['thk'][i-1]
+            if depth_top > 0:
+                vs.append(layers['vs'][i])
+                thickness.append(layers['thk'][i])
+    else:
+        for i in range(len(layers['thk'])):
+            vs.append(layers['vs'][i])
+            thickness.append(layers['thk'][i])
+
     y_hypc = fault['hypo_down_dip']
     dy = fault['width'] / nsuby
     ncyp = int(y_hypc / dy) + 1
@@ -122,11 +178,11 @@ def define_slip_extended_source(slip_file, fault, computational_param):
 
 
 def find_origin_layer(layers, fault):
-    thk_sum = 0
+    thk_sum = layers['depth_top_layer']
     if layers['thk'][len(layers['thk']) - 1] == 0:
         layers['thk'][len(layers['thk']) - 1] = 1000
     for i in range(len(layers['thk'])):
-        thk_sum = thk_sum + layers['thk'][i]
+        thk_sum += layers['thk'][i]
         if fault['hypo']['Z'] <= thk_sum:
             nlayer_hypo = i
             return nlayer_hypo
@@ -152,7 +208,7 @@ def create_plot_param():
     }
     return plot_param
 
-def define_missing_parameters(code, layers, fault, computational_param, path_data, topo):
+def define_missing_parameters(code, layers, fault, computational_param, path_data, topo, folder, sites):
     import sys
     import numpy as np
     import math
@@ -160,118 +216,8 @@ def define_missing_parameters(code, layers, fault, computational_param, path_dat
     from rapids.conversions import find_rotated_coords, determine_utm_coord, create_point, create_point_utm
     from rapids.conversions import determine_fault_coordinates_from_hypocentre, create_vertex, create_vertex_utm
     from rapids.conversions import utm_to_lon_lat
+    import os
 
-    if layers['vel_model'] == 'GNDT_14':
-        vel_model_file = path_data + '/VelModel/GNDT/m550014.stp'
-        profile = np.loadtxt(vel_model_file, skiprows=1)
-        thk = profile[:, 0]
-        rho = profile[:, 1]
-        vp = profile[:, 2]
-        vs = profile[:, 3]
-        qp = profile[:,4]
-        qs = profile[:,5]
-        depth_gndt = 0
-        for i in range(len(thk)):
-            depth_gndt = depth_gndt + thk[i]
-            if depth_gndt > 80: #Deve essere limitato in lunghezza altrimenti da' segmentation fault nel calcolo GF. Ho deciso di prendere il modello fino a circa 80 km di depth (il layer subito dopo 80 km, ma èuna mia scelta)
-                layer_number = i
-                break
-
-        layers['thk'] = thk[0:layer_number+1]
-        layers['rho'] = rho[0:layer_number+1]
-        layers['vp'] = vp[0:layer_number+1]
-        layers['vs'] = vs[0:layer_number+1]
-        layers['qp'] = qp[0:layer_number+1]
-        layers['qs'] = qs[0:layer_number+1]
-
-    elif layers['vel_model'] == 'NAC_1D_Friuli':
-        vel_model_file = path_data + '/VelModel/friuli_1D.xyz'
-        profile = np.loadtxt(vel_model_file, skiprows=3)
-        z = profile[:, 0]
-        vp = profile[:, 1]
-        vs = profile[:, 3]
-        rho = profile[:, 5]
-        vp_grouped = []
-        vs_grouped = []
-        rho_grouped = []
-        thk_grouped = []
-        next_line = 0
-        if topo == 1:
-            for i in range(len(rho)):
-                if not np.isnan(vp[i]):
-                    layers['depth_top_layer'] = z[i]
-                    break
-        else:
-            layers['depth_top_layer'] = 0
-        for i in range(len(rho)):
-            if not np.isnan(vp[i]):
-                if i == next_line:
-                    vp_grouped.append(vp[i])
-                    vs_grouped.append(vs[i])
-                    rho_grouped.append(rho[i])
-                    thk = 0
-                    for ii in range(i, len(rho)):
-                        if vp[ii] == vp[i] and vs[ii] == vs[i] and rho[ii] == rho[i]:
-                            if ii < len(rho) - 1:
-                                thk += z[ii + 1] - z[ii]
-                            else:
-                                thk += 0
-                            istop = ii
-                    thk_grouped.append(thk)
-                    next_line = istop + 1
-            else:
-                next_line = i + 1
-
-        layers['vp'] = np.asarray(vp_grouped)
-        layers['vs'] = np.asarray(vs_grouped)
-        layers['rho'] = np.asarray(rho_grouped)
-        layers['thk'] = np.asarray(thk_grouped)
-
-    else:
-        if layers['rho'] is None:
-            layers['rho'] = np.zeros((len(layers['vp'])))
-            for i in range(len(layers['vp'])):
-                # “Nafe-Drake curve” (Ludwig et al., 1970).
-                # Ludwig, W. J., J. E. Nafe, and C. L. Drake (1970).
-                # Seismic refraction, in The Sea, A. E. Maxwell, (Editor) Vol. 4, Wiley-Interscience, New York, 53–84.
-                if 1.5 <= layers['vp'][i] <= 8.5:
-                    layers['rho'][i] = 1.6612 * layers['vp'][i] - 0.4721 * layers['vp'][i] ** 2 + \
-                                   0.0671 * layers['vp'][i] ** 3 - 0.0043 * layers['vp'][i] ** 4 + \
-                                   0.000106 * layers['vp'][i] ** 5
-                else:
-                    sys.exit('Error: TO DO - need to find a regression for rho')
-
-    if layers['qs'] is None:
-        layers['qs'] = np.zeros((len(layers['vs'])))
-        thk_sum = 0
-        for i in range(len(layers['vs'])):
-            #if layers['vs'][i] < 0.5:
-            #    layers['qs'][i] = 10
-                # (based on shallow borehole studies by Tullos and Reid (1969), Hamilton (1972), Gibbs et al.(1994), Liu et al.(1994),
-                # and Kudo and Shima (1970)).San Francisco Bay Area specific studies include Gibbs et al.(1994) and Liu et al.(1994).
-            #elif 0.5 <= layers['vs'][i] < 1.5:
-            #    layers['qs'][i] = 20 * layers['vs'][i]  # vs in km/s (Olsen et al., 2003)
-            #else:
-            #    layers['qs'][i] = 100 * layers['vs'][i]  # Olsen et al., 2003
-            #thk_sum += layers['thk'][i]
-            #if thk_sum <= 2:
-            #    layers['qs'][i] = 0.05 * layers['vs'][i]*1000
-            #else:
-            #    layers['qs'][i] = 0.1 * layers['vs'][i]*1000
-
-            if layers['vs'][i] <= 0.3:
-                layers['qs'][i] = 13
-            elif 0.3 < layers['vs'][i] < 5:
-                layers['qs'][i] = -16 + 104.13 * layers['vs'][i] - 25.225 * layers['vs'][i]**2 + 8.2184 * layers['vs'][i]**3
-            else:
-                sys.exit('Error:vs larger than 5 km')
-
-    if layers['qp'] is None:
-        layers['qp'] = np.zeros((len(layers['qs'])))
-        for i in range(len(layers['vs'])):
-            #layers['qp'][i] = 9 / 4 * layers['qs'][i]  # Lay, T., and Wallace, T. (1995). Modern Global Seimology, Vol. 58.
-            layers['qp'][i] = 2 * layers['qs'][i]  # (Day and Bradley, 2001; Graves and Day, 2003, Brocher et al., 2007).
-        print('Velocity model: qp computed from qs')
 
 
     if fault['Mo'] is None and fault['Mw'] is not None:
@@ -324,8 +270,6 @@ def define_missing_parameters(code, layers, fault, computational_param, path_dat
         pbl, pbr, ptl, ptr = determine_fault_coordinates_from_hypocentre(fault)
         vertex = create_vertex(pbl, pbr, ptl, ptr)
         fault['vertex'] = vertex
-
-    print(fault['fault_type'])
 
     if fault['fault_type'] == 'extended':
 
@@ -412,7 +356,116 @@ def define_missing_parameters(code, layers, fault, computational_param, path_dat
             hypo = create_point(lon_hypo, lat_hypo, depth_hypo)  # in degrees and depth in km
             fault['hypo'] = hypo
 
+    if layers['vel_model'] == 'GNDT_14':
+        vel_model_file = path_data + '/VelModel/GNDT/m550014.stp'
+        profile = np.loadtxt(vel_model_file, skiprows=1)
+        thk = profile[:, 0]
+        rho = profile[:, 1]
+        vp = profile[:, 2]
+        vs = profile[:, 3]
+        qp = profile[:,4]
+        qs = profile[:,5]
+        depth_gndt = 0
+        for i in range(len(thk)):
+            depth_gndt = depth_gndt + thk[i]
+            if depth_gndt > 80: #Deve essere limitato in lunghezza altrimenti da' segmentation fault nel calcolo GF. Ho deciso di prendere il modello fino a circa 80 km di depth (il layer subito dopo 80 km, ma èuna mia scelta)
+                layer_number = i
+                break
 
+        layers['thk'] = thk[0:layer_number+1]
+        layers['rho'] = rho[0:layer_number+1]
+        layers['vp'] = vp[0:layer_number+1]
+        layers['vs'] = vs[0:layer_number+1]
+        layers['qp'] = qp[0:layer_number+1]
+        layers['qs'] = qs[0:layer_number+1]
+
+    elif layers['vel_model'] == 'NAC':
+        minlon, maxlon, minlat, maxlat = define_area_NAC1D(fault, sites, computational_param)
+        NAC_PATH = path_data + '/VelModel/NAC'
+        vel_model_file = folder + '/NAC_1D_selected_area.vel'
+        
+        command_nac = 'python3 rapids/profilo_medio.py --out ' + vel_model_file + ' --nac_path ' + NAC_PATH + ' --z -4 60 --lon ' + str(minlon)+ ' ' + str(maxlon) + ' --lat ' + str(minlat)+ ' ' + str(maxlat) 
+        os.system(command_nac)
+
+        profile = np.loadtxt(vel_model_file, skiprows=3)
+        z = profile[:, 0]
+        vp = profile[:, 1]
+        vs = profile[:, 3]
+        rho = profile[:, 5]
+        vp_grouped = []
+        vs_grouped = []
+        rho_grouped = []
+        thk_grouped = []
+        next_line = 0
+        if topo == 1:
+            for i in range(len(rho)):
+                if not np.isnan(vp[i]):
+                    layers['depth_top_layer'] = z[i]
+                    break
+        else:
+            layers['depth_top_layer'] = 0
+        for i in range(len(rho)):
+            if not np.isnan(vp[i]):
+                if i == next_line:
+                    vp_grouped.append(vp[i])
+                    vs_grouped.append(vs[i])
+                    rho_grouped.append(rho[i])
+                    thk = 0
+                    for ii in range(i, len(rho)):
+                        if vp[ii] == vp[i] and vs[ii] == vs[i] and rho[ii] == rho[i]:
+                            if ii < len(rho) - 1:
+                                thk += z[ii + 1] - z[ii]
+                            else:
+                                thk += 0
+                            istop = ii
+                    thk_grouped.append(thk)
+                    next_line = istop + 1
+            else:
+                next_line = i + 1
+
+        layers['vp'] = np.asarray(vp_grouped)
+        layers['vs'] = np.asarray(vs_grouped)
+        layers['rho'] = np.asarray(rho_grouped)
+        layers['thk'] = np.asarray(thk_grouped)
+
+    else:
+        if layers['rho'] is None:
+            layers['rho'] = np.zeros((len(layers['vp'])))
+            for i in range(len(layers['vp'])):
+                # “Nafe-Drake curve” (Ludwig et al., 1970).
+                # Ludwig, W. J., J. E. Nafe, and C. L. Drake (1970).
+                # Seismic refraction, in The Sea, A. E. Maxwell, (Editor) Vol. 4, Wiley-Interscience, New York, 53–84.
+                if 1.5 <= layers['vp'][i] <= 8.5:
+                    layers['rho'][i] = 1.6612 * layers['vp'][i] - 0.4721 * layers['vp'][i] ** 2 + \
+                                   0.0671 * layers['vp'][i] ** 3 - 0.0043 * layers['vp'][i] ** 4 + \
+                                   0.000106 * layers['vp'][i] ** 5
+                else:
+                    sys.exit('Error: TO DO - need to find a regression for rho')
+
+    if layers['qs'] is None:
+        layers['qs'] = np.zeros((len(layers['vs'])))
+        thk_sum = 0
+        for i in range(len(layers['vs'])):
+            if layers['vs'][i] <= 0.3:
+                layers['qs'][i] = 13
+            elif 0.3 < layers['vs'][i] < 5:
+                layers['qs'][i] = -16 + 104.13 * layers['vs'][i] - 25.225 * layers['vs'][i]**2 + 8.2184 * layers['vs'][i]**3
+            else:
+                sys.exit('Error:vs larger than 5 km')
+            #Le relazioni sopra sono prese da Graves’s and Pitarka’s(2004) 
+            #Graves, R. W., and A. Pitarka (2004). Broadband time history simulation
+            #using a hybrid approach, Proc. 13th World Conf. Earthquake Eng.,
+            #Vancouver, Canada, paper no. 1098.
+
+    if layers['qp'] is None:
+        layers['qp'] = np.zeros((len(layers['qs'])))
+        for i in range(len(layers['vs'])):
+            #layers['qp'][i] = 9 / 4 * layers['qs'][i]  # Lay, T., and Wallace, T. (1995). Modern Global Seimology, Vol. 58.
+            layers['qp'][i] = 2 * layers['qs'][i]  # (Day and Bradley, 2001; Graves and Day, 2003, Brocher et al., 2007).
+        print('Velocity model: qp computed from qs')
+
+
+    if fault['fault_type'] == 'extended':
         if fault['rupture_velocity'] is None:
             vs_average = compute_vs_average_on_fault(fault, layers)
             if fault['percentage_rupture_velocity'] is not None:

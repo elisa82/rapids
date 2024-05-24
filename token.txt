@@ -1,0 +1,14 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+{"valid_until": "2024-06-20T10:24:41.874645Z", "cn": "Elisa Zuccolo", "memberof": "/esm/registered/all", "mail": "elisa.zuccolo@eucentre.it"}
+-----BEGIN PGP SIGNATURE-----
+
+iQEcBAEBCAAGBQJmTHZpAAoJEBwG159idHlvSeMH/1/RZLO9DrZAaDECC7mfx0eA
+P7weUsLQTkkUE8F5+vtg0SFpRtsi4JhJY8ctBiF89IyIlYXSyfkXELtdEdpG/IyM
+lw8R/Ol0BPtcWNjyIHfOfk2kKhBomtfsTFgrrILdETW7PDpEFDFx6AVxfjROXyQ4
+ZzIXwT5ZF32lwxjCghnbNLpEnYnkZI54CuTteJB1NkU/WXSQgo59TFjsEBG1A13i
+rGA0hZbwU6ftdLj2Z5DM53sVTKE/hM8XQ7M7het5RzSbNpz4hSaqMzCuw0FWo0Zg
+EockxIOQ9jFUeTfgWaZ1hU8wKkEIo0picVXsziVtEw0jk6Vwpo5ok7poENMQzFY=
+=8tXx
+-----END PGP SIGNATURE-----

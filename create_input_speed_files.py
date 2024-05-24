@@ -1,7 +1,6 @@
 from scipy.interpolate import RectBivariateSpline, bisplrep
 
 
-
 def redefine_layers(layers_orig, fault, computational_param):
     import numpy as np
     from rapids.read_input_data import create_material_properties
@@ -917,47 +916,6 @@ def define_mesh_size(layers, computational_param):
     return mesh_size
 
 
-def define_area_topo(fault, sites, computational_param):
-    coord1, coord2, coord3, coord4 = define_area(fault, sites, computational_param)
-    buffer = computational_param['abso_bound_dist_km'] / 111 + 0.05  # questa relazione è da aggiustare!
-    for i in range(2):
-        if i == 0:
-            str_coord = 'lon'
-        else:
-            str_coord = 'lat'
-        min_val = min(sites[str_coord])
-        max_val = max(sites[str_coord])
-        min_val = min(min_val, fault['hypo'][str_coord])
-        max_val = max(max_val, fault['hypo'][str_coord])
-
-        if fault['vertex']['pbl'][str_coord] > max_val:
-            max_val = fault['vertex']['pbl'][str_coord]
-        if fault['vertex']['pbr'][str_coord] > max_val:
-            max_val = fault['vertex']['pbr'][str_coord]
-        if fault['vertex']['ptr'][str_coord] > max_val:
-            max_val = fault['vertex']['ptr'][str_coord]
-        if fault['vertex']['ptl'][str_coord] > max_val:
-            max_val = fault['vertex']['ptl'][str_coord]
-
-        if str_coord == 'lon':
-            maxlon = max_val + buffer
-        else:
-            maxlat = max_val + buffer
-
-        if fault['vertex']['pbl'][str_coord] < min_val:
-            min_val = fault['vertex']['pbl'][str_coord]
-        if fault['vertex']['pbr'][str_coord] < min_val:
-            min_val = fault['vertex']['pbr'][str_coord]
-        if fault['vertex']['ptr'][str_coord] < min_val:
-            min_val = fault['vertex']['ptr'][str_coord]
-        if fault['vertex']['ptl'][str_coord] < min_val:
-            min_val = fault['vertex']['ptl'][str_coord]
-        if str_coord == 'lon':
-            minlon = min_val - buffer
-        else:
-            minlat = min_val - buffer
-
-    return minlon, maxlon, minlat, maxlat
 
 
 def find_repeat_interval(filename):

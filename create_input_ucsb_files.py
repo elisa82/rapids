@@ -113,7 +113,7 @@ def create_syn1D(folder, computational_param):
     file_syn = folder + '/syn_1d.inp'
     fid = open(file_syn, 'w')
     fid.write('1 1                    ! # of point source for each subfault\n')
-    fid.write('60.0,    40.0,    20.0   ! #Perturbation on strike, rake, and dip\n')
+    fid.write('60.0,    40.0,    20.0   ! # Perturbation on strike, rake, and dip\n')
     fid.write('0.1,  3.0                  ! #two frequency for perturbation\n')
     duration = computational_param['dt_ucsb'] * computational_param['npts_ucsb']
     fid.write('{} {} {}\n'.format(computational_param['kappa'], duration, ' ! # duration of outputing GM'))
@@ -134,11 +134,31 @@ def create_syn1D(folder, computational_param):
 def create_model(folder, layers):
     fid = open(folder + '/model.vel', 'w')
     nlayers = len(layers['thk'])
-    fid.write('{}    {}\n'.format(nlayers, 1.0))
     thk_ucsb = list(layers['thk'])
     thk_ucsb[nlayers - 1] = 0
+    new_nlayers = 0
     for i in range(len(layers['thk'])):
-        fid.write('{:7.2f}{:7.2f}{:7.2f}{:7.1f}{:8.1f}{:8.1f}\n'.format(layers['vp'][i], layers['vs'][i],
+        if i == 0:
+            depth_top = layers['depth_top_layer'] 
+        else:
+            depth_top += layers['thk'][i-1]
+        if depth_top >= 0:
+            new_nlayers += 1
+    #fid.write('{}    {}\n'.format(new_nlayers + 1, 1.0))
+    fid.write('{}    {}\n'.format(new_nlayers, 1.0))
+    for i in range(len(layers['thk'])):
+        if i == 0:
+            depth_top = layers['depth_top_layer'] 
+        else:
+            depth_top += layers['thk'][i-1]
+        #if depth_top == 0:
+            #fid.write('{:7.2f}{:7.2f}{:7.2f}{:7.1f}{:8.1f}{:8.1f}\n'.format(1.02, 0.6,
+            #                                                            2.5, 0.3, 40, 20))
+            #fid.write('{:7.2f}{:7.2f}{:7.2f}{:7.1f}{:8.1f}{:8.1f}\n'.format(layers['vp'][i], layers['vs'][i],
+            #                                                            layers['rho'][i], thk_ucsb[i]-0.3, layers['qp'][i],
+            #                                                            layers['qs'][i]))
+        if depth_top >= 0:
+            fid.write('{:7.2f}{:7.2f}{:7.2f}{:7.1f}{:8.1f}{:8.1f}\n'.format(layers['vp'][i], layers['vs'][i],
                                                                         layers['rho'][i], thk_ucsb[i], layers['qp'][i],
                                                                         layers['qs'][i]))
     fid.close()
@@ -242,7 +262,7 @@ def create_Green(folder, computational_param, fault, sites, type_green):
     fid.write('{} {} {}\n'.format(dist_max, dist_min, d_step))
     t_cor = 3.0
     # number of time steps, time increment, seconds to be saved before first arrival. This should never be set to 0 (because of wrap‐ around artifacts!!!
-    fid.write('{} {} {}\n'.format(computational_param['npts_ucsb'], computational_param['dt_ucsb'], t_cor))
+    fid.write('{} {} {}\n'.format(int(computational_param['npts_ucsb']), computational_param['dt_ucsb'], t_cor))
     if type_green == 'HF':
         fid.write('{}\n'.format('model.green_HF'))  # "The name of file to store Green Bank"
         fid.write('{} {}\n'.format(computational_param['qzero'], computational_param['alpha']))

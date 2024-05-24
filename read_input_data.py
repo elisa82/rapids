@@ -513,7 +513,6 @@ def read_input_data(fileini, code, calculation_mode):
 
     if 'ucsb' in code:
         computational_param['kappa'] = float(input['kappa'])
-        computational_param['dt_ucsb'] = float(input['dt_ucsb'])
         computational_param['npts_ucsb'] = int(input['npts_ucsb'])
         computational_param['qzero'] = float(input['qzero'])
         computational_param['alpha'] = float(input['alpha'])
@@ -522,6 +521,7 @@ def read_input_data(fileini, code, calculation_mode):
         computational_param['fmax_ucsb'] = float(input['fmax_ucsb'])
         computational_param['fmin_ucsb'] = float(input['fmin_ucsb'])
         computational_param['realizations'] = int(input['realizations'])
+        computational_param['dt_ucsb'] = 1 / (2 * computational_param['fmax_ucsb'])
         try:
             seed = [x.strip() for x in input['seed'].strip('[]').split(',')]
             computational_param['seed'] = np.array(seed, dtype=int)
