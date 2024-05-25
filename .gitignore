@@ -1,3 +1,6 @@
-/DATA/*
+/DATA/ESM/*
+/DATA/GF/*
+/DATA/MESH/*
+/DATA/topo/*
 .DS_Store
 __pycache__/*
