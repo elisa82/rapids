@@ -86,6 +86,8 @@ if __name__ == '__main__':
                 else:
                     path_code_ucsb = settings['path_code_ucsb']
                 if not os.path.exists(folder + '/UCSB'):
+                    path_code_ucsb_green_HF = settings['path_code_ucsb_green_HF']
+                    path_code_ucsb_green_LF = settings['path_code_ucsb_green_LF']
                     create_input_ucsb_run(folder, layers, fault, computational_param, sites,
                                       path_code_ucsb, path_code_ucsb_green_HF, path_code_ucsb_green_LF, '--source', 'nogreen', 
                                       [], path_data) 

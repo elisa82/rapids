@@ -397,7 +397,7 @@ def define_missing_parameters(code, layers, fault, computational_param, path_dat
         rho_grouped = []
         thk_grouped = []
         next_line = 0
-        if topo == 1:
+        if topo == 'yes':
             for i in range(len(rho)):
                 if not np.isnan(vp[i]):
                     layers['depth_top_layer'] = z[i]
