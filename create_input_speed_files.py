@@ -1078,38 +1078,39 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     coord1, coord2, coord3, coord4 = define_area(fault, sites, computational_param)
 
     if topo == 'yes':
-        path_topo = path_data+'/DEM'
+        path_topo = path_data+'/topo'
         temp1, temp2, zone, letter = determine_utm_coord(fault['hypo']['lon'], fault['hypo']['lat'])
-        coord1_lon, coord1_lat = utm_to_lon_lat(coord1[0], coord1[1], zone)
-        coord2_lon, coord2_lat = utm_to_lon_lat(coord2[0], coord2[1], zone)
-        coord3_lon, coord3_lat = utm_to_lon_lat(coord3[0], coord3[1], zone)
-        coord4_lon, coord4_lat = utm_to_lon_lat(coord4[0], coord4[1], zone)
-        buffer = 0.2
-        minlon = min(coord1_lon, coord2_lon, coord3_lon, coord4_lon) - buffer
-        maxlon = max(coord1_lon, coord2_lon, coord3_lon, coord4_lon) + buffer
-        minlat = min(coord1_lat, coord2_lat, coord3_lat, coord4_lat) - buffer
-        maxlat = max(coord1_lat, coord2_lat, coord3_lat, coord4_lat) + buffer
-        topo_xyz_file = folder_mesh + '/ptopo.mean.xyz'
-        command_extract = 'gmt blockmean ' + path_topo + '/bedrock.xyz -R' + str(minlon) + '/' + str(
-            maxlon) + '/' + str(minlat) \
-                          + '/' + str(maxlat) + ' -I15s+e/15s+e > ' + topo_xyz_file
-        print(command_extract)
-        os.system(command_extract)
-        topo_utm_file = folder_mesh + '/ptopo.mean.utm'
-        command_cp = 'cp ' + '$HOME/rapids/topo_tools/convert_lonlat2utm.pl' + ' ' + folder_mesh
-        os.system(command_cp)
-        command_convert2utm = folder_mesh + '/convert_lonlat2utm.pl ' + topo_xyz_file + ' ' + str(zone) + ' > ' + \
-                              topo_utm_file
-        os.system(command_convert2utm)
-        result_find_repeat_line = find_repeat_interval(topo_xyz_file)
-        if result_find_repeat_line is not None:
-            interval = result_find_repeat_line
-        else:
-            sys.exit("Error: No repeating x coordinates found in " + topo_xyz_file)
-        python_script_cubit = folder_mesh + '/read_topo.py'
-        create_read_topo_py(python_script_cubit, topo_utm_file, interval, folder_mesh)
-        command_cubit = path_cubit + ' -nographics python3 ' + python_script_cubit
-        os.system(command_cubit)
+#        #coord1_lon, coord1_lat = utm_to_lon_lat(coord1[0], coord1[1], zone)
+#        #coord2_lon, coord2_lat = utm_to_lon_lat(coord2[0], coord2[1], zone)
+#        #coord3_lon, coord3_lat = utm_to_lon_lat(coord3[0], coord3[1], zone)
+#        #coord4_lon, coord4_lat = utm_to_lon_lat(coord4[0], coord4[1], zone)
+#        #buffer = 0.2
+#        #minlon = min(coord1_lon, coord2_lon, coord3_lon, coord4_lon) - buffer
+#        #maxlon = max(coord1_lon, coord2_lon, coord3_lon, coord4_lon) + buffer
+#        #minlat = min(coord1_lat, coord2_lat, coord3_lat, coord4_lat) - buffer
+#        #maxlat = max(coord1_lat, coord2_lat, coord3_lat, coord4_lat) + buffer
+#        #topo_xyz_file = folder_mesh + '/ptopo.mean.xyz'
+#        #command_extract = 'gmt blockmean ' + path_topo + '/bedrock.xyz -R' + str(minlon) + '/' + str(
+#        #    maxlon) + '/' + str(minlat) \
+#        #                  + '/' + str(maxlat) + ' -I15s+e/15s+e > ' + topo_xyz_file
+#        #os.system(command_extract)
+#        topo_xyz_file = path_topo + '/bedrock.xyz' #in questo modo considera tutta l'area, altrimenti con gmt blockmean vado a selezionare solo una sottoarea
+#        topo_utm_file = folder_mesh + '/ptopo.mean.utm'
+#        command_cp = 'cp ' + '$HOME/rapids/topo_tools/convert_lonlat2utm.pl' + ' ' + folder_mesh
+#        os.system(command_cp)
+#        command_convert2utm = folder_mesh + '/convert_lonlat2utm.pl ' + topo_xyz_file + ' ' + str(zone) + ' > ' + \
+#                              topo_utm_file
+#        os.system(command_convert2utm)
+#        result_find_repeat_line = find_repeat_interval(topo_xyz_file)
+#        if result_find_repeat_line is not None:
+#            interval = result_find_repeat_line
+#        else:
+#            sys.exit("Error: No repeating x coordinates found in " + topo_xyz_file)
+#        python_script_cubit = folder_mesh + '/read_topo.py'
+#        create_read_topo_py(python_script_cubit, topo_utm_file, interval, folder_mesh)
+#        command_cubit = path_cubit + ' -nographics python3 ' + python_script_cubit
+#        os.system(command_cubit)
+
 
     cubit_journal = folder_mesh + '/crustal_model.jou'
     fid = open(cubit_journal, 'w')
@@ -1119,7 +1120,8 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     fid.write('{}\n'.format(''))
     if topo == 'yes':
         fid.write('{}\n'.format('# Reading topography CUB file, and cropping out the unwanted portion'))
-        file_cub = folder_mesh + '/topo.cub'
+        #file_cub = folder_mesh + '/topo.cub'
+        file_cub = path_topo + '/Friuli.cub' #non lo prende più dal file creato in real time, ma dalla cartella DATA
         # file_stl = folder_mesh + '/topo.stl'
         # command = 'import stl \"'+file_stl+'\" nofreesurfaces heal attributes_on  separate_bodies'
         command = 'open \"' + file_cub + '\"'

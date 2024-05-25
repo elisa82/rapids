@@ -1,2 +1,3 @@
-/DATA/GF/*
-/DATA/MESH/*
+/DATA/*
+.DS_Store
+__pycache__/*

@@ -52,17 +52,21 @@ def create_input_speed_run(folder, layers, fault, computational_param, sites, pa
     if computational_param['mesh']  == 'no':
         file_mesh_final = 'crustal_model'
         if fault['Mw'] == 4.2:
-            if topo == 'yes':
-                precomputed_mesh_label = 'M4.2_2024_03_27_topo.mesh' 
-            if topo == 'no':
-                precomputed_mesh_label = 'M4.2_2024_03_27_flat.mesh' 
+            precomputed_mesh_label = 'M4.2_2024_03_27' 
         if fault['Mw'] == 6.4:
-            if topo == 'yes':
-                precomputed_mesh_label = 'M6.4_1976_05_06_topo.mesh'
-            if topo == 'no':
-                precomputed_mesh_label = 'M6.4_1976_05_06_flat.mesh'
+            precomputed_mesh_label = 'M6.4_1976_05_06'
         command_cp_mesh = 'cp '+path_data+'/MESH/crustal_model_' + precomputed_mesh_label + ' ' + folder+'/crustal_model.mesh'
         os.system(command_cp_mesh)
+        if topo == 'yes':
+            command_cp_topo_tri = 'cp '+path_data+'/MESH/XYZ_' + precomputed_mesh_label + '.out ' + folder+'/XYZ.out'
+            os.system(command_cp_topo_tri)
+            command_cp_mesh = 'cp '+path_data+'/MESH/crustal_model_' + precomputed_mesh_label + '_topo.mesh ' + folder+'/crustal_model.mesh'
+            os.system(command_cp_mesh)
+        else:
+            command_cp_mesh = 'cp '+path_data+'/MESH/crustal_model_' + precomputed_mesh_label + '_flat.mesh ' + folder+'/crustal_model.mesh'
+            os.system(command_cp_mesh)
+
+
 
     create_input_speed_file(folder, computational_param, file_mesh_final)
 
