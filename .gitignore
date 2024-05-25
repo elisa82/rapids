@@ -1,3 +1,12 @@
 /DATA/GF/*
 /DATA/MESH/*
 /DATA/DEM/*
+/topo_tools/Friuli.cub
+/topo_tools/Friuli.utm
+/topo_tools/Friuli.xyz
+/topo_tools/gmt.history
+/topo_tools/history*
+/topo_tools/ptopo.mean.utm
+/topo_tools/ptopo.mean.xyz
+/topo_tools/topo.cub
+/topo_tools/ISTRUZIONI_da_SPECFEM3D/*
