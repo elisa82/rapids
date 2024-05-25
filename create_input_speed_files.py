@@ -1121,11 +1121,8 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     if topo == 'yes':
         fid.write('{}\n'.format('# Reading topography CUB file, and cropping out the unwanted portion'))
         #file_cub = folder_mesh + '/topo.cub'
-<<<<<<< HEAD
         file_cub = path_topo + '/Friuli.cub' #non lo prende più dal file creato in real time, ma dalla cartella DATA
-=======
-        file_cub = path_topo + '/topo.cub' #non lo prende più dal file creato in real time, ma dalla cartella DATA
->>>>>>> 8a10c9fb5d192f317209f46463bbaa3581de06e5
+        #file_cub = path_topo + '/topo.cub' #non lo prende più dal file creato in real time, ma dalla cartella DATA
         # file_stl = folder_mesh + '/topo.stl'
         # command = 'import stl \"'+file_stl+'\" nofreesurfaces heal attributes_on  separate_bodies'
         command = 'open \"' + file_cub + '\"'
