@@ -1,0 +1,146 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2707
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 HelveticaNeue-Bold;\f2\fnil\fcharset0 HelveticaNeue;
+\f3\fswiss\fcharset0 Helvetica-Bold;\f4\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red25\green28\blue31;\red255\green255\blue255;\red0\green0\blue0;
+}
+{\*\expandedcolortbl;;\cssrgb\c12941\c14510\c16078;\cssrgb\c100000\c100000\c100000;\csgray\c0;
+}
+\paperw11900\paperh16840\margl1440\margr1440\vieww28300\viewh15260\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 ----------------------------------------------------------------------\
+README\
+----------------------------------------------------------------------\
+\
+This example creates a single block model with topography around Friuli\
+using CUBIT, and runs a forward simulation.\
+\
+step-by-step tutorial:\
+\
+0. preparing topography data:\
+\
+    a low resolution 'ptopo.mean.utm' file is provided to run the example,\
+    this would be the procedure to create it yourself:\
+\
+   a) You can get SRTM 90m Digital Elevation Data for a\
+      region of interest at: http://srtm.csi.cgiar.org\
+\
+      It is contained in the download: srtm_39_03.zip\
+\pard\pardeftab720\partightenfactor0
+
+\f1\b\fs32 \cf2 \cb3 \expnd0\expndtw0\kerning0
+Product:
+\f2\b0 \'a0SRTM 90m DEM Version 4\
+
+\f1\b Data File Name:
+\f2\b0 \'a0srtm_39_03.zip\
+
+\f1\b Mask File Name:
+\f2\b0 \'a0srtm_mk_39_03.zip\
+
+\f1\b Latitude Min:
+\f2\b0 \'a010 N\'a0\'a0\'a0\'a0\'a0
+\f1\b Max:
+\f2\b0 \'a015 N\
+
+\f1\b Longitude Min:
+\f2\b0 \'a045 E\'a0\'a0\'a0\'a0\'a0
+\f1\b Max:
+\f2\b0 \'a050 E\
+
+\f1\b Center Point
+\f2\b0 \'a0
+\f1\b Lat:
+\f2\b0 \'a012.5 N\'a0\'a0\'a0\'a0
+\f1\b Long:
+\f2\b0 \'a047.5 E\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 \cb1 \kerning1\expnd0\expndtw0 \
+\
+      unzipping the file\
+        > unzip srtm_39_03.zip\
+      leads to:\
+        ..\
+        srtm_39_03.tif\
+        ..\
+\
+   b) To convert the tif-file into an lon-lat-elevation format, you can use the\
+      package FWTools at: http://fwtools.maptools.org/\
+\
+      install the package and use their gdal2xyz executable to extract\
+      into xyz format:\
+        > FWTools-2.0.6/bin_safe/
+\f3\b gdal2xyz.py
+\f0\b0  srtm_12_03.tif > srtm_12_03.xyz\
+\
+      the file 'srtm_12_03.xyz' has now the format: #longitude #latitude #elevation (m)\
+      (the file size is ~ 963 MB)\
+\
+
+\f3\b OPPURE usare questo sito: https://mygeodata.cloud/converter/tif-to-xyz
+\f0\b0 \
+\
+   c) Extract the detailed region of interest:\
+\
+      To further extract and manipulate the topography data, you can use the\
+      package GMT at: http://gmt.soest.hawaii.edu/\
+\
+      For our purposes, the region of interest will be: -R-122.3/-122.1/46.1/46.3\
+      (~23.5 km x 23.5 km )\
+\
+      Using the blockmean executable, we extract and interpolate the topography data\
+      for the detailed region, using an interpolated grid spacing of 0.006 degrees ~ 700 m:\
+        > blockmean srtm_12_03.xyz -R-122.3/-122.1/46.1/46.3 -I0.006/0.006 > ptopo.mean.xyz\
+\
+   c) Since the mesh will need Cartesian coordinates, we convert the topography file\
+      from (longitude/latitude/elevation) to UTM (X/Y/Z) coordinates.\
+      Mount St.Helens lies in the UTM zone: 10 (T).\
+\
+      Use the script 'convert_lonlat2utm.pl' provided in this example folder:\
+        > ./convert_lonlat2utm.pl ptopo.mean.xyz 10 > ptopo.mean.utm\
+      to create a new file 'ptopo.mean.utm' with format: #UTM_X #UTM_Y #Z\
+\
+\
+1. create an STL surface from topography data:\
+\
+      run script in CUBIT:\
+      claro -> Menu "Tools" -> "Play Journal File" ... and select file: "read_topo.py"\
+\
+      this reads in the input file with name: ptopo.mean.utm\
+      and should create a file: topo.stl\
+\
+      note: CUBIT has limited features when using facets/STL file formats.\
+            It is in general preferable to work with ACIS formats.\
+\
+            However, using an ACIS topography file leads to a slower meshing process.\
+            This is why we prefer to use STL file formats here, but rely on\
+            a developer command (script was tested using CUBIT version 12.2).\
+\
+\
+2. create mesh:\
+\
+   - run cubit GUI:\
+     > claro\
+\
+     then run meshing script:\
+     claro -> Menu "Tools" -> "Play Journal File" ... and select file: "mesh_mount.py"\
+\
+     this creates all the mesh files in subdirectory MESH/\
+\
+\
+3. run processing script for a default simulation on 4 CPUs (must have access to mpi):\
+\
+    - run script in this example directory:\
+      > ./run_this_example.sh\
+\
+      this script handles the following steps:\
+        - decomposes mesh files (example creates 4 partitions from mesh files given in MESH/)\
+        - runs the database generation\
+        - runs a single forward simulation (using the default setup files in DATA/)\
+\
+\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f4\fs28 \cf4 \CocoaLigature0 /Applications/Coreform-Cubit-2023.1.app/Contents/MacOS/Coreform-Cubit-2023.1 -nographics python3 read_topo.py}
