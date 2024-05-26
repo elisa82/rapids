@@ -3,7 +3,10 @@ def compute_maximum_distance(mag):
     import numpy as np
 
     #to define threshold and dist according to fragility functions of target structures
-    threshold = 0.01
+    if mag < 5.5:
+        threshold = 0.01
+    else:
+        threshold = 0.02
 
     dist = 0
     while dist < 300:

@@ -941,7 +941,6 @@ def find_repeat_interval(filename):
 
 
 def create_read_topo_py(python_script_cubit, topo_utm_file, interval, folder_mesh):
-    print(topo_utm_file)
     # file_stl = '/topo.stl'
     file_cub = folder_mesh + '/topo.cub'
     lines = [
