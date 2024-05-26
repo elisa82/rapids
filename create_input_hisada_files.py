@@ -33,25 +33,11 @@ def create_input_grflt12s(folder, computational_param, layers, fault, sites):
     thk_hisada = layers['thk']
     thk_hisada[nlayers - 1] = 0
     layers['thk'][nlayers-1] = 0
-    new_layers = 0
-    for i in range(nlayers):
-        if i == 0:
-            depth_top = layers['depth_top_layer']
-        else:
-            depth_top += layers['thk'][i-1]
-        if depth_top >= 0:
-            new_nlayers =+ 1
-    fid.write('{:10d}{:s}\n'.format(new_nlayers, '    : NL(NUMBER OF LAYERS, max 20) t/m3, m/s, , m/s, , m'))
-    for i in range(nlayers):
-        if i == 0:
-            depth_top = layers['depth_top_layer']
-        else:
-            depth_top += layers['thk'][i-1]
-        if depth_top >= 0:
-            fid.write('{:7.3f}{:7.1f}{:7.1f}{:4.1f}{:7.1f}{:7.1f}{:4.1f}{:8.1f} '
-                  '{:s}\n'.format(layers['rho'][i], layers['vp'][i]*1000, layers['qp'][i], layers['fqp'][i],
-                                  layers['vs'][i]*1000, layers['qs'][i], layers['fqs'][i],
-                                  thk_hisada[i]*1000, ' : DNS, VP, Qp, fqp, VS, Qs, fqs, Thick'))
+    fid.write('{:10d}{:s}\n'.format(nlayers, '    : NL(NUMBER OF LAYERS, max 20) t/m3, m/s, , m/s, , m'))
+    fid.write('{:7.3f}{:7.1f}{:7.1f}{:4.1f}{:7.1f}{:7.1f}{:4.1f}{:8.1f} '
+            '{:s}\n'.format(layers['rho'][i], layers['vp'][i]*1000, layers['qp'][i], layers['fqp'][i],
+            layers['vs'][i]*1000, layers['qs'][i], layers['fqs'][i],
+            thk_hisada[i]*1000, ' : DNS, VP, Qp, fqp, VS, Qs, fqs, Thick'))
     fid.write('  *FAULT DATA *\n')
     fid.write('{:10.1f}{:10.1f}{:s}\n'.format(fault['length']*1000, fault['width']*1000,
                                                 ' : Total Length(STR) and Width(DIP)(m) (2f10.0),'))

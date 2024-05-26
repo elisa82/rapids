@@ -11,6 +11,7 @@ def compute_maximum_distance(mag):
         if np.exp(mean-stdv) < threshold:
             break
         dist += 1
+    print(dist)
     return dist
 
 
@@ -255,6 +256,7 @@ def create_material_properties():
     fqs = None
     vel_model = None
     depth_top_layer = 0
+    thk_topo = None
     layers = {
         "vp": vp,
         "vs": vs,
@@ -265,7 +267,8 @@ def create_material_properties():
         "rho": rho,
         "thk": thk,
         "vel_model": vel_model,
-        "depth_top_layer": depth_top_layer
+        "depth_top_layer": depth_top_layer,
+        "thk_topo": thk_topo
     }
     return layers
 

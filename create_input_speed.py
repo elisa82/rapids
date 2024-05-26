@@ -18,7 +18,7 @@ def create_input_speed_run(folder, layers, fault, computational_param, sites, pa
     os.chdir(folder)
     create_input_LS(folder, sites)
 
-    layers = redefine_layers(layers, fault, computational_param)
+    layers = redefine_layers(layers, fault, computational_param, topo)
 
     if fault['fault_type'] == 'extended':
         create_input_extended(folder, fault, layers, folder_ucsb)

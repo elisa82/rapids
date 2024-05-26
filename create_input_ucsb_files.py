@@ -136,29 +136,9 @@ def create_model(folder, layers):
     nlayers = len(layers['thk'])
     thk_ucsb = list(layers['thk'])
     thk_ucsb[nlayers - 1] = 0
-    new_nlayers = 0
+    fid.write('{}    {}\n'.format(nlayers, 1.0))
     for i in range(len(layers['thk'])):
-        if i == 0:
-            depth_top = layers['depth_top_layer'] 
-        else:
-            depth_top += layers['thk'][i-1]
-        if depth_top >= 0:
-            new_nlayers += 1
-    #fid.write('{}    {}\n'.format(new_nlayers + 1, 1.0))
-    fid.write('{}    {}\n'.format(new_nlayers, 1.0))
-    for i in range(len(layers['thk'])):
-        if i == 0:
-            depth_top = layers['depth_top_layer'] 
-        else:
-            depth_top += layers['thk'][i-1]
-        #if depth_top == 0:
-            #fid.write('{:7.2f}{:7.2f}{:7.2f}{:7.1f}{:8.1f}{:8.1f}\n'.format(1.02, 0.6,
-            #                                                            2.5, 0.3, 40, 20))
-            #fid.write('{:7.2f}{:7.2f}{:7.2f}{:7.1f}{:8.1f}{:8.1f}\n'.format(layers['vp'][i], layers['vs'][i],
-            #                                                            layers['rho'][i], thk_ucsb[i]-0.3, layers['qp'][i],
-            #                                                            layers['qs'][i]))
-        if depth_top >= 0:
-            fid.write('{:7.2f}{:7.2f}{:7.2f}{:7.1f}{:8.1f}{:8.1f}\n'.format(layers['vp'][i], layers['vs'][i],
+        fid.write('{:7.2f}{:7.2f}{:7.2f}{:7.1f}{:8.1f}{:8.1f}\n'.format(layers['vp'][i], layers['vs'][i],
                                                                         layers['rho'][i], thk_ucsb[i], layers['qp'][i],
                                                                         layers['qs'][i]))
     fid.close()

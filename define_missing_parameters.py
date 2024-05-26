@@ -48,19 +48,19 @@ def compute_vs_average_on_fault(fault, layers):
     nsubx = 200
     vs = []
     thickness = []
-    if layers['depth_top_layer'] < 0:
-        for i in range(len(layers['thk'])):
-            if i == 0:
-                depth_top = layers['depth_top_layer']
-            else:
-                depth_top += layers['thk'][i-1]
-            if depth_top > 0:
-                vs.append(layers['vs'][i])
-                thickness.append(layers['thk'][i])
-    else:
-        for i in range(len(layers['thk'])):
-            vs.append(layers['vs'][i])
-            thickness.append(layers['thk'][i])
+    #if layers['depth_top_layer'] < 0:
+    #    for i in range(len(layers['thk'])):
+    #        if i == 0:
+    #            depth_top = layers['depth_top_layer']
+    #        else:
+    #            depth_top += layers['thk'][i-1]
+    #        if depth_top > 0:
+    #            vs.append(layers['vs'][i])
+    #            thickness.append(layers['thk'][i])
+    #else:
+    for i in range(len(layers['thk'])):
+        vs.append(layers['vs'][i])
+        thickness.append(layers['thk'][i])
 
     y_hypc = fault['hypo_down_dip']
     dy = fault['width'] / nsuby
@@ -178,7 +178,7 @@ def define_slip_extended_source(slip_file, fault, computational_param):
 
 
 def find_origin_layer(layers, fault):
-    thk_sum = layers['depth_top_layer']
+    thk_sum = 0
     if layers['thk'][len(layers['thk']) - 1] == 0:
         layers['thk'][len(layers['thk']) - 1] = 1000
     for i in range(len(layers['thk'])):
@@ -397,13 +397,10 @@ def define_missing_parameters(code, layers, fault, computational_param, path_dat
         rho_grouped = []
         thk_grouped = []
         next_line = 0
-        if topo == 'yes':
-            for i in range(len(rho)):
-                if not np.isnan(vp[i]):
-                    layers['depth_top_layer'] = z[i]
-                    break
-        else:
-            layers['depth_top_layer'] = 0
+        for i in range(len(rho)):
+            if not np.isnan(vp[i]):
+                layers['depth_top_layer'] = z[i]
+                break
         for i in range(len(rho)):
             if not np.isnan(vp[i]):
                 if i == next_line:
@@ -423,10 +420,31 @@ def define_missing_parameters(code, layers, fault, computational_param, path_dat
             else:
                 next_line = i + 1
 
-        layers['vp'] = np.asarray(vp_grouped)
-        layers['vs'] = np.asarray(vs_grouped)
-        layers['rho'] = np.asarray(rho_grouped)
-        layers['thk'] = np.asarray(thk_grouped)
+        vp_final = []
+        vs_final = []
+        rho_final = []
+        thk_final = []
+        top = layers['depth_top_layer']
+        thk_topo = 0
+        for i in range(len(vs_grouped)):
+            if i > 0:
+                top += thk_grouped[i-1] 
+            if top <= 0:
+                thk_topo += thk_grouped[i]
+        layers['thk_topo'] = thk_topo 
+        depth = 0
+        for i in range(len(vs_grouped)):
+            depth += thk_grouped[i]
+            if depth >= thk_topo:
+                vp_final.append(vp_grouped[i])
+                vs_final.append(vs_grouped[i])
+                rho_final.append(rho_grouped[i])
+                thk_final.append(thk_grouped[i])
+
+        layers['vp'] = np.asarray(vp_final)
+        layers['vs'] = np.asarray(vs_final)
+        layers['rho'] = np.asarray(rho_final)
+        layers['thk'] = np.asarray(thk_final)
 
     else:
         if layers['rho'] is None:

@@ -1,7 +1,7 @@
 from scipy.interpolate import RectBivariateSpline, bisplrep
 
 
-def redefine_layers(layers_orig, fault, computational_param):
+def redefine_layers(layers_orig, fault, computational_param, topo):
     import numpy as np
     from rapids.read_input_data import create_material_properties
 
@@ -41,6 +41,9 @@ def redefine_layers(layers_orig, fault, computational_param):
     layers_new['qs'] = np.asarray(qs_newlayers)
     layers_new['rho'] = np.asarray(rho_newlayers)
     layers_new['depth_top_layer'] = layers_orig['depth_top_layer']
+    layers_new['thk_topo'] = layers_orig['thk_topo']
+    if topo == 'yes' and layers_new['depth_top_layer']<0:
+        layers_new['thk'][0] = layers_new['thk_topo']
 
     return layers_new
 
@@ -1134,14 +1137,12 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
         fid.write('{}\n'.format(''))
 
     if topo == 'no':
-        fid.write('{} {} {} {}\n'.format('create vertex', coord1[0], coord1[1], -layers['depth_top_layer'] * 1000))
-        fid.write('{} {} {} {}\n'.format('create vertex', coord2[0], coord2[1], -layers['depth_top_layer'] * 1000))
-        fid.write('{} {} {} {}\n'.format('create vertex', coord3[0], coord3[1], -layers['depth_top_layer'] * 1000))
+        fid.write('{} {} {} {}\n'.format('create vertex', coord1[0], coord1[1], 0))
+        fid.write('{} {} {} {}\n'.format('create vertex', coord2[0], coord2[1], 0))
+        fid.write('{} {} {} {}\n'.format('create vertex', coord3[0], coord3[1], 0))
         fid.write('{}\n'.format(''))
         fid.write('{}\n'.format('create surface parallelogram vertex 1 2 3'))
     else:
-        print(layers['depth_top_layer'])
-        print(layers['depth_top_layer']+layers['thk'][0])
         fid.write('{} {} {} {}\n'.format('create vertex', coord1[0], coord1[1], -(layers['depth_top_layer']+layers['thk'][0]) * 1000))
         fid.write('{} {} {} {}\n'.format('create vertex', coord2[0], coord2[1], -(layers['depth_top_layer']+layers['thk'][0]) * 1000))
         fid.write('{} {} {} {}\n'.format('create vertex', coord3[0], coord3[1], -(layers['depth_top_layer']+layers['thk'][0]) * 1000))
@@ -1154,7 +1155,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
         fid.write('{}\n'.format('webcut volume 2 with sheet body 1'))
         fid.write('{}\n'.format(''))
         fid.write('{}\n'.format('surface 13 copy move x 0 y 0 z 0       # Top Surface'))
-        fid.write('{}\n'.format('surface 7 copy move x 0 y 0 z 0        # Bottom Surface'))
+        fid.write('{} {} {}\n'.format('surface 7 copy move x 0 y 0 z', 0, '# Bottom Surface'))
         fid.write('{}\n'.format(''))
         fid.write('{}\n'.format('delete curve 9'))
         fid.write('{}\n'.format('delete volume 2 3'))
@@ -1169,12 +1170,14 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     nlayers = len(layers['rho'])
 
     if topo == 'no':
-        fid.write('{} {}\n'.format('surface 1 copy move x 0 y 0 z', -(layers['depth_top_layer']+layers['thk'][0]) * 1000))  # create first layer alone for consistency with topo procedure
-    
-    depth_layers = layers['thk'][0] + layers['depth_top_layer']
+        fid.write('{} {}\n'.format('surface 1 copy move x 0 y 0 z', -layers['thk'][0] * 1000))  # create first layer alone for consistency with topo procedure
+        depth_layers0 = layers['thk'][0] 
+    if topo == 'yes':
+        depth_layers0 = layers['depth_top_layer'] + layers['thk'][0]
+    depth_layers = depth_layers0
     for i in range(1, nlayers):
-        depth_layers = depth_layers + layers['thk'][i]
-        fid.write('{} {}\n'.format('surface 2 copy move x 0 y 0 z', -depth_layers * 1000))
+        depth_layers += layers['thk'][i] 
+        fid.write('{} {}\n'.format('surface 2 copy move x 0 y 0 z', -(depth_layers - depth_layers0) * 1000))
     fid.write('{}\n'.format(''))
     fid.write('{}\n'.format('# create all vertical joining curves'))
     for j in range(4):
