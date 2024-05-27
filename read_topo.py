@@ -16,11 +16,11 @@ print(sys.path)
 
 # topography file, data points per lon-increment
 #inputFile = '/Users/elisa/Documents/Progetti/SimulazioniFriuli/run_ext_topo/SPEED/MESH/ptopo.mean.utm'
-inputFile = '/Users/elisa/Documents/Progetti/rapids/topo_tools/Friuli.utm'
+inputFile = '/Users/elisa/Documents/Progetti/rapids/DATA/topo/Friuli.utm'
 
 # X coordinate in topography file repeats after line
 #nstep = 529
-nstep = 369
+nstep = 497
 
 #############################################################
 
@@ -82,7 +82,7 @@ cubit.cmd('echo on')
 # saves and exports surface
 # cubit file (uses ACIS file format)
 #cubit.cmd('save as "/Users/elisa/Documents/Progetti/SimulazioniFriuli/run_ext_topo/SPEED/MESH/topo.cub" overwrite')
-cubit.cmd('save as "/Users/elisa/Documents/Progetti/rapids/topo_tools/Friuli.cub" overwrite')
+cubit.cmd('save as "/Users/elisa/Documents/Progetti/rapids/DATA/topo/Friuli.cub" overwrite')
 
 print('#exporting done')
 print('#finished')
