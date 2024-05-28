@@ -6,7 +6,7 @@ def compute_maximum_distance(mag):
     if mag < 5.5:
         threshold = 0.01
     else:
-        threshold = 0.03
+        threshold = 0.05
 
     dist = 0
     while dist < 200:
