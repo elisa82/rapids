@@ -6,10 +6,10 @@ def compute_maximum_distance(mag):
     if mag < 5.5:
         threshold = 0.01
     else:
-        threshold = 0.02
+        threshold = 0.03
 
     dist = 0
-    while dist < 300:
+    while dist < 200:
         mean, stdv = bragato_slejko_2005.BragatoSlejko2005().ground_motion('PGA', mag, dist)
         if np.exp(mean-stdv) < threshold:
             break

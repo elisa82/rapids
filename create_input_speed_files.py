@@ -1151,6 +1151,8 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
         fid.write('{} {} {} {}\n'.format('create vertex', coord1[0], coord1[1], 7000))
         fid.write('{}\n'.format('create curve vertex 5 9'))
         fid.write('{}\n'.format('sweep surface 2 along curve 9 # creation of voulme 2'))
+        fid.write('{}\n'.format('volume all scale 0.001'))
+        fid.write('{}\n'.format('curve 9 scale 0.001'))
         fid.write('{}\n'.format('webcut volume 2 with sheet body 1'))
         fid.write('{}\n'.format(''))
         fid.write('{}\n'.format('surface 13 copy move x 0 y 0 z 0       # Top Surface'))
@@ -1169,14 +1171,14 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     nlayers = len(layers['rho'])
 
     if topo == 'no':
-        fid.write('{} {}\n'.format('surface 1 copy move x 0 y 0 z', -layers['thk'][0] * 1000))  # create first layer alone for consistency with topo procedure
+        fid.write('{} {}\n'.format('surface 1 copy move x 0 y 0 z', -layers['thk'][0]))  # create first layer alone for consistency with topo procedure
         depth_layers0 = layers['thk'][0] 
     if topo == 'yes':
         depth_layers0 = layers['depth_top_layer'] + layers['thk'][0]
     depth_layers = depth_layers0
     for i in range(1, nlayers):
         depth_layers += layers['thk'][i] 
-        fid.write('{} {}\n'.format('surface 2 copy move x 0 y 0 z', -(depth_layers - depth_layers0) * 1000))
+        fid.write('{} {}\n'.format('surface 2 copy move x 0 y 0 z', -(depth_layers - depth_layers0)))
     fid.write('{}\n'.format(''))
     fid.write('{}\n'.format('# create all vertical joining curves'))
     for j in range(4):
@@ -1248,8 +1250,8 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     fid.write('{}\n'.format('# Initial Coarse Mesh'))
     mesh_size_from_vel = define_mesh_size(layers, computational_param)
     if topo == 'yes':
-        resolution_topo = 325  # m corrispondenti a 15 arcsec alle nostre latitudini
-        mesh_size = min(mesh_size_from_vel, resolution_topo)
+        resolution_topo = 0.325  # m corrispondenti a 15 arcsec alle nostre latitudini
+        mesh_size = min(mesh_size_from_vel, resolution_topo)/1000.
     else:
         mesh_size = mesh_size_from_vel
     print('mesh_size= ', mesh_size)
@@ -1267,7 +1269,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
         fid.write('{}\n'.format(''))
     num1 = 1
     for i in range(nlayers):
-        num2 = math.ceil(layers['thk'][i] * 1000 / mesh_size_from_vel)
+        num2 = math.ceil(layers['thk'][i] / mesh_size_from_vel)
         if topo == 'yes':
             if i > 0:
                 fid.write('{} {} {} {}\n'.format('curve', num1, 'interval', num2))
@@ -1336,6 +1338,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     fid.write('{}\n'.format('set exodus netcdf4 off'))
     fid.write('{}\n'.format('set large exodus file off'))
     file_exodus = folder_mesh + '/crustal_model.e'
+    fid.write('{}\n'.format('transform mesh output scale 1000'))
     fid.write('{}{}{}\n'.format('export mesh "', file_exodus, '" dimension 3 overwrite'))
 
     if topo == 'yes':
@@ -1353,6 +1356,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
         block_topo = abso_block + 1
         fid.write('{} {} {} {}\n'.format('block', block_topo, 'surf', surf_topo))
         file_exodus_topo = folder_mesh + '/Topography.e'
+        fid.write('{}\n'.format('transform mesh output scale 1000'))
         fid.write('{}{}{} {} {}\n'.format('export mesh "', file_exodus_topo, '" dimension 3 block', block_topo,
                                           'overwrite'))
     else:
