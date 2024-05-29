@@ -27,23 +27,29 @@ def create_input_speed_run(folder, layers, fault, computational_param, sites, pa
 
     if computational_param['mesh']  == 'yes':
 
-        cubit_journal, file_exodus_mesh, file_exodus_topo = create_mesh(folder, computational_param, layers, fault, sites,
-                                                                    topo, path_cubit, path_data)
-        command_cubit_jou = path_cubit + ' -nographics python3 ' + cubit_journal
-        os.system(command_cubit_jou)
+        #cubit_journal, file_exodus_mesh, file_exodus_topo = create_mesh(folder, computational_param, layers, fault, sites,
+        #                                                            topo, path_cubit, path_data)
+        #command_cubit_jou = path_cubit + ' -nographics python3 ' + cubit_journal
+        #os.system(command_cubit_jou)
 
+
+        file_exodus_mesh = '/g100_scratch/userexternal/ezuccolo/TeRABIT/2024-05-28/SPEED/MESH/crustal_model.e'
         fileNameExodus = file_exodus_mesh
         (FilePathMesh, ExtMesh) = os.path.splitext(fileNameExodus)
         fileNameTxtMesh = FilePathMesh + '.txt'
         command_ncdump_mesh = 'ncdump ' + file_exodus_mesh + ' > ' + fileNameTxtMesh
         os.system(command_ncdump_mesh)
+        print(command_ncdump_mesh)
         convert_mesh(fileNameTxtMesh, 'mesh', folder)
 
+        print('topo')
         if topo == 'yes':
+            file_exodus_topo = '/g100_scratch/userexternal/ezuccolo/TeRABIT/2024-05-28/SPEED/MESH/Topography.e'
             fileNameExodus = file_exodus_topo
             (FilePathTopo, ExtTopo) = os.path.splitext(fileNameExodus)
             fileNameTxtTopo = FilePathTopo + '.txt'
             command_ncdump_topo = 'ncdump ' + file_exodus_topo + ' > ' + fileNameTxtTopo
+            print(command_ncdump_topo)
             os.system(command_ncdump_topo)
             convert_mesh(fileNameTxtTopo, 'xyz', folder)
 
