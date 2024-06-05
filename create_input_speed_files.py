@@ -1248,7 +1248,8 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     fid.write('{}\n'.format('#*************************************'))
     fid.write('{}\n'.format(''))
     fid.write('{}\n'.format('# Initial Coarse Mesh'))
-    mesh_size_from_vel = define_mesh_size(layers, computational_param)/.1000
+    mesh_size_from_vel = define_mesh_size(layers, computational_param)
+    mesh_size_from_vel = mesh_size_from_vel/1000.
     if topo == 'yes':
         resolution_topo = 0.325  # m corrispondenti a 15 arcsec alle nostre latitudini
         mesh_size = min(mesh_size_from_vel, resolution_topo)
