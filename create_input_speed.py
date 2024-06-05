@@ -58,8 +58,6 @@ def create_input_speed_run(folder, layers, fault, computational_param, sites, pa
             precomputed_mesh_label = 'M4.2_2024_03_27' 
         if fault['Mw'] == 6.4:
             precomputed_mesh_label = 'M6.4_1976_05_06'
-        command_cp_mesh = 'cp '+path_data+'/MESH/crustal_model_' + precomputed_mesh_label + ' ' + folder+'/crustal_model.mesh'
-        os.system(command_cp_mesh)
         if topo == 'yes':
             command_cp_topo_tri = 'cp '+path_data+'/MESH/XYZ_' + precomputed_mesh_label + '.out ' + folder+'/XYZ.out'
             os.system(command_cp_topo_tri)
