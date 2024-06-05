@@ -28,9 +28,9 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
         create_stations(folder, sites, fault)
         create_syn1D(folder, computational_param)
         if green == 'nogreen':
-            if fault['Mw'] == '4.2':
+            if fault['Mw'] == 4.2:
                 GF_precomputed_label = 'M4.2_2024_03_27'
-            if fault['Mw'] == '6.4':
+            if fault['Mw'] == 6.4:
                 GF_precomputed_label = 'M6.4_1976_05_06'
         if 'LF' in band_freq:
             folder_LF = folder + '/HF' #L'ho chiamato HF ma sarebbe il run con la LF
