@@ -1141,6 +1141,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
         fid.write('{} {} {} {}\n'.format('create vertex', coord3[0], coord3[1], 0))
         fid.write('{}\n'.format(''))
         fid.write('{}\n'.format('create surface parallelogram vertex 1 2 3'))
+        fid.write('{}\n'.format('volume all scale 0.001'))
     else:
         fid.write('{} {} {} {}\n'.format('create vertex', coord1[0], coord1[1], -(layers['depth_top_layer']+layers['thk'][0]) * 1000))
         fid.write('{} {} {} {}\n'.format('create vertex', coord2[0], coord2[1], -(layers['depth_top_layer']+layers['thk'][0]) * 1000))
@@ -1172,7 +1173,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
 
     if topo == 'no':
         fid.write('{} {}\n'.format('surface 1 copy move x 0 y 0 z', -layers['thk'][0]))  # create first layer alone for consistency with topo procedure
-        depth_layers0 = layers['thk'][0] 
+        depth_layers0 = layers['thk'][0]
     if topo == 'yes':
         depth_layers0 = layers['depth_top_layer'] + layers['thk'][0]
     depth_layers = depth_layers0
