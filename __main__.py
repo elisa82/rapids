@@ -33,7 +33,7 @@ if __name__ == '__main__':
             'python3 -m rapids #input_file [code] [mode]')
 
     #read settings
-    settings = read_settings('settings.ini')
+    settings = read_settings('settings.ini', code)
 
     path_data = settings['path_data']
 

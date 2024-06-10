@@ -19,7 +19,7 @@ def create_settings():
     }
     return settings
 
-def read_settings(file_settings):
+def read_settings(file_settings, code):
 
     settings = create_settings()
 
@@ -31,15 +31,19 @@ def read_settings(file_settings):
                 key, value = line.strip().split('=', 1)
                 input[key.strip()] = value.strip()
             line = fp.readline()
+    
+    if 'speed' in code:
+        settings['path_data'] = input['path_data']
+        settings['path_cubit'] = input['path_cubit']
+        settings['path_code_speed'] = input['path_code_speed']
 
-    settings['path_data'] = input['path_data']
-    settings['path_code_hisada'] = input['path_code_hisada']
-    settings['path_code_speed'] = input['path_code_speed']
-    settings['path_code_ucsb'] = input['path_code_ucsb']
-    settings['path_cubit'] = input['path_cubit']
-    settings['path_code_ucsb_Yoffe'] = input['path_code_ucsb_Yoffe']
-    settings['path_code_ucsb_green_HF'] = input['path_code_ucsb_green_HF']
-    settings['path_code_ucsb_green_LF'] = input['path_code_ucsb_green_LF']
+    if 'hisada' in code:
+        settings['path_code_hisada'] = input['path_code_hisada']
 
+    if 'ucsb' in code:
+        settings['path_code_ucsb'] = input['path_code_ucsb']
+        settings['path_code_ucsb_Yoffe'] = input['path_code_ucsb_Yoffe']
+        settings['path_code_ucsb_green_HF'] = input['path_code_ucsb_green_HF']
+        settings['path_code_ucsb_green_LF'] = input['path_code_ucsb_green_LF']
 
     return settings
