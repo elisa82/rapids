@@ -38,9 +38,11 @@ def read_settings(file_settings, code):
         settings['path_code_speed'] = input['path_code_speed']
 
     if 'hisada' in code:
+        settings['path_data'] = input['path_data']
         settings['path_code_hisada'] = input['path_code_hisada']
 
     if 'ucsb' in code:
+        settings['path_data'] = input['path_data']
         settings['path_code_ucsb'] = input['path_code_ucsb']
         settings['path_code_ucsb_Yoffe'] = input['path_code_ucsb_Yoffe']
         settings['path_code_ucsb_green_HF'] = input['path_code_ucsb_green_HF']
