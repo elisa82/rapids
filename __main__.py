@@ -12,6 +12,8 @@ from rapids.post_processing import post_processing
 from rapids.define_missing_parameters import define_missing_parameters
 from rapids.stitch_seismograms import stitch
 from rapids.conversions import speed2sac, speed2ascii
+import json
+from rapids.read_input_data import read_folder
 
 #Di default SPEED è in spostamento e MS-DWS in accelerazione!!!
 #Tutto il resto in velocità!!!!
@@ -19,6 +21,53 @@ from rapids.conversions import speed2sac, speed2ascii
 #freq_band_gf = [HF/LF/LFHF/HFLF]
 #mesh = [yes/no]
 #gf = [yes/no]
+
+def load_inputs(fileini):
+    import numpy as np
+    import json
+
+    folder = read_folder(fileini)
+    file_fault_parameters = folder + '/fault_parameters.json'
+    file_layers = folder + '/layers.json'
+    file_sites = folder + '/sites.json'
+    file_plot_param = folder + '/plot_param.json'
+    file_computational_param = folder + '/computational_param.json'
+
+    f = open(file_layers)
+    layers = json.load(f)
+    layers['vp'] = np.asarray(layers['vp'])
+    layers['vs'] = np.asarray(layers['vs'])
+    layers['qp'] = np.asarray(layers['qp'])
+    layers['qs'] = np.asarray(layers['qs'])
+    layers['rho'] = np.asarray(layers['rho'])
+    layers['thk'] = np.asarray(layers['thk'])
+    if layers['fqp'] is not None:
+        layers['fqp'] = np.asarray(layers['fqp'])
+    if layers['fqs'] is not None:
+        layers['fqs'] = np.asarray(layers['fqs'])
+
+
+    f = open(file_fault_parameters)
+    fault = json.load(f)
+
+    f = open(file_computational_param)
+    computational_param = json.load(f)
+    computational_param['optiout'] = np.asarray(computational_param['optiout'])
+    computational_param['seed'] = np.asarray(computational_param['seed'])
+
+    f = open(file_sites)
+    sites = json.load(f)
+    sites['X'] = np.asarray(sites['X'])
+    sites['Y'] = np.asarray(sites['Y'])
+    sites['Z'] = np.asarray(sites['Z'])
+    sites['ID'] = np.asarray(sites['ID'])
+    sites['lon'] = np.asarray(sites['lon'])
+    sites['lat'] = np.asarray(sites['lat'])
+
+    f = open(file_plot_param)
+    plot_param = json.load(f)
+
+    return layers, fault, computational_param, sites, plot_param, folder
 
 if __name__ == '__main__':
 
@@ -37,13 +86,50 @@ if __name__ == '__main__':
 
     path_data = settings['path_data']
 
-    # read input file
-    [layers, fault, computational_param, sites, plot_param, topo, folder, cineca] = \
-        read_input_data(fileini, code, calculation_mode)
+    if calculation_mode == '--input' or calculation_mode == '--run': 
+        # read input file
+        [layers, fault, computational_param, sites, plot_param, topo, folder, cineca] = \
+            read_input_data(fileini, code)
 
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-    fault, layers = define_missing_parameters(code, layers, fault, computational_param, path_data, topo, folder, sites)
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        fault, layers = define_missing_parameters(code, layers, fault, computational_param, path_data, topo, folder, sites)
+        layers['vp'] = list(layers['vp'])
+        layers['vs'] = list(layers['vs'])
+        layers['qp'] = list(layers['qp'])
+        layers['qs'] = list(layers['qs'])
+        layers['rho'] = list(layers['rho'])
+        layers['thk'] = list(layers['thk'])
+        if layers['fqp'] is not None:
+            layers['fqp'] = list(layers['fqp'])
+        if layers['fqs'] is not None:
+            layers['fqs'] = list(layers['fqs'])
+        sites['X'] = list(sites['X'])
+        sites['Y'] = list(sites['Y'])
+        sites['Z'] = list(sites['Z'])
+        sites['ID'] = list(sites['ID'])
+        sites['lon'] = list(sites['lon'])
+        sites['lat'] = list(sites['lat'])
+        computational_param['optiout'] = list(computational_param['optiout'])
+        computational_param['seed'] = list(computational_param['seed'])
+
+        file_fault_parameters = folder + '/fault_parameters.json'
+        file_layers = folder + '/layers.json'
+        file_sites = folder + '/sites.json'
+        file_plot_param = folder + '/plot_param.json'
+        file_computational_param = folder + '/computational_param.json'
+        with open(file_fault_parameters, 'w') as f:
+            json.dump(fault, f, ensure_ascii=False)
+        with open(file_layers, 'w') as f:
+            json.dump(layers, f, ensure_ascii=False)
+        with open(file_sites, 'w') as f:
+            json.dump(sites, f, ensure_ascii=False)
+        with open(file_plot_param, 'w') as f:
+            json.dump(plot_param, f, ensure_ascii=False)
+        with open(file_computational_param, 'w') as f:
+            json.dump(computational_param, f, ensure_ascii=False)
+            
+    layers, fault, computational_param, sites, plot_param, folder = load_inputs(fileini)
 
     if code == 'hisada':
         if calculation_mode == '--input':

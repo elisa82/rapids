@@ -1,3 +1,16 @@
+def read_folder(fileini):
+    input = {}
+    with open(fileini) as fp:
+        line = fp.readline()
+        while line:
+            if line.strip().find('=') >= 0:
+                key, value = line.strip().split('=', 1)
+                input[key.strip()] = value.strip()
+            line = fp.readline()
+    output_folder = input['output_folder']
+    return output_folder
+
+
 def compute_maximum_distance(mag):
     import rapids.bragato_slejko_2005 as bragato_slejko_2005
     import numpy as np
@@ -291,7 +304,7 @@ def create_receivers(receivers_X, receivers_Y, receivers_Z, receivers_ID, receiv
 def create_plot_param():
     fmin_filter = None
     fmax_filter = None
-    time_max_plot = None
+    time_max_plot = 50
     plot_param = {
         "fmin_filter": fmin_filter,
         "fmax_filter": fmax_filter,
@@ -300,7 +313,7 @@ def create_plot_param():
     return plot_param
 
 
-def read_input_data(fileini, code, calculation_mode):
+def read_input_data(fileini, code):
     import sys
     import numpy as np
     from shapely.geometry import Point
@@ -540,7 +553,7 @@ def read_input_data(fileini, code, calculation_mode):
         computational_param['dt_ucsb'] = 1 / (2 * computational_param['fmax_ucsb'])
         try:
             seed = [x.strip() for x in input['seed'].strip('[]').split(',')]
-            computational_param['seed'] = np.array(seed, dtype=int)
+            computational_param['seed'] = np.array(seed)
         except KeyError:
             pass
 
@@ -607,22 +620,26 @@ def read_input_data(fileini, code, calculation_mode):
                              receivers_lon, receivers_lat)
 
     plot_param = create_plot_param()
-    if calculation_mode == '--post' or calculation_mode == '--run' or calculation_mode == '--stitch':
-        try:
-            plot_param['fmin_filter'] = float(input['fmin_filter'])
-        except KeyError:
-            plot_param['fmin_filter'] = None
-        try:
-            plot_param['fmax_filter'] = float(input['fmax_filter'])
-        except KeyError:
-            plot_param['fmax_filter'] = None
+    try:
+        plot_param['fmin_filter'] = float(input['fmin_filter'])
+    except KeyError:
+        plot_param['fmin_filter'] = None
+    try:
+        plot_param['fmax_filter'] = float(input['fmax_filter'])
+    except KeyError:
+        plot_param['fmax_filter'] = None
+    try:
         plot_param['time_max_plot'] = float(input['time_max_plot'])
+    except KeyError:
+        plot_param['time_max_plot'] = 50
 
     topo = input['topography']
 
     #STITCHED
-    if calculation_mode == '--stitch':
+    try:
         computational_param['freq_join'] = float(input['freq_join'])
+    except KeyError:
+        computational_param['freq_join'] = None
 
     cineca = create_cineca_slurm()
 

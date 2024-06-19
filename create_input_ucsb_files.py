@@ -96,8 +96,8 @@ def create_input_ffsp(folder, computational_param, fault, is_moment):
 
     fid.write('{} {} {} {} {}\n'.format(SubFaults_Top_taper, SubFaults_Right_taper, SubFaults_Bottom_taper,
                                         SubFaults_Left_taper, '! numbers of subfaults to be tapered at each side'))
-    fid.write('{} {} {} {}\n'.format(computational_param['seed'][0], computational_param['seed'][1],
-                                     computational_param['seed'][2], '! seed for generating random numbers'))
+    fid.write('{} {} {} {}\n'.format(int(computational_param['seed'][0]), int(computational_param['seed'][1]),
+                                     int(computational_param['seed'][2]), '! seed for generating random numbers'))
     max_num_realizations = computational_param['realizations']
 
     fid.write('{} {} {}\n'.format(1, max_num_realizations, '! first and last index of random generations'))

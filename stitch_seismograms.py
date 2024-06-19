@@ -38,12 +38,10 @@ def stitch(folder, path_code, computational_param, fault, sites, num_sm, code):
     elif 'msdwn' in code:
         folderHF = folder + '/MS-DWN'
     if code == 'ucsb':
-        folderLF = folder + '/UCSB/LF'
+        folderLF = folder + '/UCSB/HF' #questo in origine era LF, ma questa cosa va sistemata!
         folderHF = folder + '/UCSB/HF'
-        folder = folder + '/UCSB/STITCHED'
 
-    if code == 'ucsbspeed' or code == 'speeducsb':
-        folder = folder + '/STITCHED'
+    folder = folder + '/STITCHED'
 
     if not os.path.exists(folder):
         os.makedirs(folder)

@@ -11,6 +11,7 @@ from rapids.create_input_speed_files import create_input_speed_file
 from rapids.create_input_speed_files import create_script_speed
 from rapids.create_input_speed_files import create_input_extended
 from rapids.read_input_data import read_input_data
+from rapids.read_input_data import read_folder
 from rapids.conversions import convert_mesh
 from rapids.read_settings import read_settings
 from rapids.post_processing import post_processing
