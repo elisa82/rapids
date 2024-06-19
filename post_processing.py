@@ -600,15 +600,22 @@ def prepare_signal(sig, dt, fmin, fmax):
     signal_fft, xf = do_fft(signal_filtered, dt)
     return signal_filtered, signal_fft, xf
 
-def post_processing(output_folder, plot_param, code, sites, fault, computational_param, path_data):
+
+def create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder):
+    import numpy as np
+    single_peaks = np.zeros((7))
+    single_peaks[0] = iobs+1
+    single_peaks[1] = sites['lon'][iobs]
+    single_peaks[2] = sites['lat'][iobs]
+    single_peaks[3: 7] = peaks
+    file_single_peaks = output_folder + '/' + str(iobs) + '_peaks_' + ext_out + '_' + selected_code + '.npy'
+    np.save(file_single_peaks, single_peaks)
+    return
+
+
+def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_param, path_data, output_folder):
     import matplotlib.pylab as plt
     import numpy as np
-    import os
-
-    folder_plot = output_folder + '/plot'
-    isExist = os.path.exists(folder_plot)
-    if not isExist:
-        os.makedirs(folder_plot)
 
     folder_hisada = output_folder + '/HISADA'
     folder_ucsb = output_folder + '/UCSB/HF'
@@ -627,32 +634,19 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
 
     Repi = compute_Repi(sites, fault)
 
-    fmt = '%d', '%7.4f', '%7.4f', '%9.5f', '%9.5f', '%9.5f', '%9.5f'
 
-    for j in range(3):
-        peaks_hisada = np.zeros((len(sites['ID']), 7))
-        peaks_speed = np.zeros((len(sites['ID']), 7))
-        peaks_esm = np.zeros((len(sites['ID']), 7))
-        peaks_ucsb = np.zeros((len(sites['ID']), 7))
-        peaks_stitched_ucsb = np.zeros((len(sites['ID']), 7))
-        peaks_stitched_speeducsb = np.zeros((len(sites['ID']), 7))
-        peaks_msdwn = np.zeros((len(sites['ID']), 7))
-        peaks_ms = np.zeros((len(sites['ID']), 7))
-        peaks_dwn = np.zeros((len(sites['ID']), 7))
-        if j == 0:
-            ext_out = 'd'
-            unit_measure = 'cm'
-            label_map = 'PGD (' + unit_measure + ')'
-        if j == 1:
-            ext_out = 'v'
-            unit_measure = 'cm/s'
-            label_map = 'PGV (' + unit_measure + ')'
-        if j == 2:
-            ext_out = 'a'
-            unit_measure = 'g'
-            label_map = 'PGA (' + unit_measure + ')'
-        #for iobs in range(1):
-        for iobs in range(len(sites['Z'])):
+    #for iobs in range(1):
+    for iobs in range(len(sites['Z'])):
+        for j in range(3):
+            if j == 0:
+                ext_out = 'd'
+                unit_measure = 'cm'
+            if j == 1:
+                ext_out = 'v'
+                unit_measure = 'cm/s'
+            if j == 2:
+                ext_out = 'a'
+                unit_measure = 'g'
             if fault['IDx'] == 'Yoffe-DCF':
                 num_realizations = 1
             else:
@@ -662,169 +656,120 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                 plot_file = folder_plot + '/' + str(sites['ID'][iobs]) + "_" + code + "." + ext_out + '_' + \
                         str(isource).zfill(3) + ".png"
                 plt.figure(100 * j + iobs)
-                for jj in range(9):
-                    if jj == 0:
-                        if 'hisada' in code:
-                            selected_code = 'hisada'
-                            label_code = 'HisadaBielak'
-                            folder_simulation = folder_hisada
-                            col = 'g'
-                            if computational_param['fmax_hisada'] < fmax:
-                                fmax_hisada = computational_param['fmax_hisada']
-                            else:
-                                fmax_hisada = fmax
-                            line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
-                                                              sites, label_code, col, fmin, fmax_hisada, isource)
-                            handles_tag.append(line_name)
-                            peaks_hisada[iobs, 0] = iobs+1
-                            peaks_hisada[iobs, 1] = sites['lon'][iobs]
-                            peaks_hisada[iobs, 2] = sites['lat'][iobs]
-                            peaks_hisada[iobs, 3: 7] = peaks
-                        else:
-                            pass
-                    if jj == 8:
-                        if 'speed' in code and 'stitched' not in code:
-                            selected_code = 'speed'
-                            folder_simulation = folder_speed
-                            label_code = 'SPEED'
-                            col = 'b'
-                            if fmax is not None and computational_param['fmax_speed'] < fmax:
-                                fmax_speed = computational_param['fmax_speed']
-                            else:
-                                fmax_speed = fmax
-                            line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
-                                                              sites, label_code, col, fmin, fmax_speed, isource)
-                            handles_tag.append(line_name)
-                            peaks_speed[iobs, 3: 7] = peaks
-                            peaks_speed[iobs, 0] = iobs+1
-                            peaks_speed[iobs, 1] = sites['lon'][iobs]
-                            peaks_speed[iobs, 2] = sites['lat'][iobs]
-                        else:
-                            pass
-                    if jj == 2:
-                        if 'ucsb' in code and 'stitched' not in code:
-                            selected_code = 'ucsb'
-                            folder_simulation = folder_ucsb
-                            label_code = 'UCSB'
-                            col = 'k'
-                            if fmax is not None and computational_param['fmax_ucsb'] < fmax:
-                                fmax_ucsb = computational_param['fmax_ucsb']
-                            else:
-                                fmax_ucsb = fmax
-                            line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
-                                                              sites, label_code, col, fmin, fmax_ucsb, isource)
-                            handles_tag.append(line_name)
-                            peaks_ucsb[iobs, 3: 7] = peaks
-                            peaks_ucsb[iobs, 0] = iobs+1
-                            peaks_ucsb[iobs, 1] = sites['lon'][iobs]
-                            peaks_ucsb[iobs, 2] = sites['lat'][iobs]
-                        else:
-                            pass
-                    if jj == 3:
-                        if 'stitched-ucsb' in code:
-                            selected_code = 'stitched-ucsb'
-                            folder_simulation = folder_stitched_ucsb
-                            label_code = 'STITCHED-UCSB'
-                            col = 'k'
-                            if fmax is not None and computational_param['fmax_ucsb'] < fmax:
-                                fmax_stitched_ucsb = computational_param['fmax_ucsb'] #stitched è uguale ad ucsb
-                            else:
-                                fmax_stitched_ucsb = fmax
-                            line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
-                                                              sites, label_code, col, fmin, fmax_stitched_ucsb, isource)
-                            handles_tag.append(line_name)
-                            peaks_stitched_ucsb[iobs, 3: 7] = peaks
-                            peaks_stitched_ucsb[iobs, 0] = iobs+1
-                            peaks_stitched_ucsb[iobs, 1] = sites['lon'][iobs]
-                            peaks_stitched_ucsb[iobs, 2] = sites['lat'][iobs]
-                        else:
-                            pass
-                    if jj == 4:
-                        if 'stitched-speeducsb' in code:
-                            selected_code = 'stitched-speeducsb'
-                            folder_simulation = folder_stitched_speeducsb
-                            label_code = 'STITCHED-SPEEDUCSB'
-                            col = 'k'
-                            if fmax is not None and computational_param['fmax_ucsb'] < fmax:
-                                fmax_stitched_speeducsb = computational_param['fmax_ucsb'] #stitched è uguale ad ucsb
-                            else:
-                                fmax_stitched_speeducsb = fmax
-                            line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
-                                                              sites, label_code, col, fmin, fmax_stitched_speeducsb, isource)
-                            handles_tag.append(line_name)
-                            peaks_stitched_speeducsb[iobs, 3: 7] = peaks
-                            peaks_stitched_speeducsb[iobs, 0] = iobs+1
-                            peaks_stitched_speeducsb[iobs, 1] = sites['lon'][iobs]
-                            peaks_stitched_speeducsb[iobs, 2] = sites['lat'][iobs]
-                        else:
-                            pass
-                    if jj == 5:
-                        if 'hybridmd' in code:
-                            selected_code = 'msdwn'
-                            folder_simulation = folder_msdwn
-                            label_code = 'MS-DWN'
-                            col = 'k'
-                            fmax_msdwn = fmax
-                            line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
-                                                              sites, label_code, col, fmin, fmax_msdwn, isource)
-                            handles_tag.append(line_name)
-                            peaks_msdwn[iobs, 3: 7] = peaks
-                            peaks_msdwn[iobs, 0] = iobs+1
-                            peaks_msdwn[iobs, 1] = sites['lon'][iobs]
-                            peaks_msdwn[iobs, 2] = sites['lat'][iobs]
-                        else:
-                            pass
 
-                    if jj == 6:
-                        if 'ms' in code:
-                            selected_code = 'ms'
-                            folder_simulation = folder_ms
-                            label_code = 'MS'
-                            col = 'cyan'
-                            fmax_msdwn = fmax
-                            line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
-                                                              sites, label_code, col, fmin, fmax_msdwn, isource)
-                            handles_tag.append(line_name)
-                            peaks_ms[iobs, 3: 7] = peaks
-                            peaks_ms[iobs, 0] = iobs+1
-                            peaks_ms[iobs, 1] = sites['lon'][iobs]
-                            peaks_ms[iobs, 2] = sites['lat'][iobs]
-                        else:
-                            pass
+                if 'hisada' in code:
+                    selected_code = 'hisada'
+                    label_code = 'HisadaBielak'
+                    folder_simulation = folder_hisada
+                    col = 'g'
+                    if computational_param['fmax_hisada'] < fmax:
+                        fmax_hisada = computational_param['fmax_hisada']
+                    else:
+                        fmax_hisada = fmax
+                    line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                                                      sites, label_code, col, fmin, fmax_hisada, isource)
+                    handles_tag.append(line_name)
+                    create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
 
-                    if jj == 7:
-                        if 'dwn' in code:
-                            selected_code = 'dwn'
-                            folder_simulation = folder_dwn
-                            label_code = 'DWN'
-                            col = 'm'
-                            fmax_msdwn = fmax
-                            line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
-                                                              sites, label_code, col, fmin, fmax_msdwn, isource)
-                            handles_tag.append(line_name)
-                            peaks_dwn[iobs, 3: 7] = peaks
-                            peaks_dwn[iobs, 0] = iobs+1
-                            peaks_dwn[iobs, 1] = sites['lon'][iobs]
-                            peaks_dwn[iobs, 2] = sites['lat'][iobs]
-                        else:
-                            pass
-                    if jj == 1:
-                        if 'esm' in code:
-                            selected_code = 'esm'
-                            label_code = 'recorded'
-                            folder_simulation = folder_esm
-                            col = 'r'
-                            fmax_esm = fmax
-                            line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
-                                                              sites, label_code, col, fmin, fmax_esm, isource)
-                            handles_tag.append(line_name)
-                            peaks_esm[iobs, 3: 7] = peaks
-                            peaks_esm[iobs, 0] = iobs+1
-                            peaks_esm[iobs, 1] = sites['lon'][iobs]
-                            peaks_esm[iobs, 2] = sites['lat'][iobs]
-                        else:
-                            pass
+                if 'speed' in code and 'stitched' not in code:
+                    selected_code = 'speed'
+                    folder_simulation = folder_speed
+                    label_code = 'SPEED'
+                    col = 'b'
+                    if fmax is not None and computational_param['fmax_speed'] < fmax:
+                        fmax_speed = computational_param['fmax_speed']
+                    else:
+                        fmax_speed = fmax
+                    line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                                                      sites, label_code, col, fmin, fmax_speed, isource)
+                    handles_tag.append(line_name)
+                    create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
 
+                if 'ucsb' in code and 'stitched' not in code:
+                    selected_code = 'ucsb'
+                    folder_simulation = folder_ucsb
+                    label_code = 'UCSB'
+                    col = 'k'
+                    if fmax is not None and computational_param['fmax_ucsb'] < fmax:
+                        fmax_ucsb = computational_param['fmax_ucsb']
+                    else:
+                        fmax_ucsb = fmax
+                    line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                                                      sites, label_code, col, fmin, fmax_ucsb, isource)
+                    handles_tag.append(line_name)
+                    create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
+
+                if 'stitched-ucsb' in code:
+                    selected_code = 'stitched-ucsb'
+                    folder_simulation = folder_stitched_ucsb
+                    label_code = 'STITCHED-UCSB'
+                    col = 'k'
+                    if fmax is not None and computational_param['fmax_ucsb'] < fmax:
+                        fmax_stitched_ucsb = computational_param['fmax_ucsb'] #stitched è uguale ad ucsb
+                    else:
+                        fmax_stitched_ucsb = fmax
+                    line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                                                      sites, label_code, col, fmin, fmax_stitched_ucsb, isource)
+                    handles_tag.append(line_name)
+                    create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
+
+                if 'stitched-speeducsb' in code:
+                    selected_code = 'stitched-speeducsb'
+                    folder_simulation = folder_stitched_speeducsb
+                    label_code = 'STITCHED-SPEEDUCSB'
+                    col = 'k'
+                    if fmax is not None and computational_param['fmax_ucsb'] < fmax:
+                        fmax_stitched_speeducsb = computational_param['fmax_ucsb'] #stitched è uguale ad ucsb
+                    else:
+                        fmax_stitched_speeducsb = fmax
+                    line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                                                      sites, label_code, col, fmin, fmax_stitched_speeducsb, isource)
+                    handles_tag.append(line_name)
+                    create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
+
+                if 'hybridmd' in code:
+                    selected_code = 'msdwn'
+                    folder_simulation = folder_msdwn
+                    label_code = 'MS-DWN'
+                    col = 'k'
+                    fmax_msdwn = fmax
+                    line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                                                      sites, label_code, col, fmin, fmax_msdwn, isource)
+                    handles_tag.append(line_name)
+                    create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
+
+                if 'ms' in code:
+                    selected_code = 'ms'
+                    folder_simulation = folder_ms
+                    label_code = 'MS'
+                    col = 'cyan'
+                    fmax_msdwn = fmax
+                    line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                                                      sites, label_code, col, fmin, fmax_msdwn, isource)
+                    handles_tag.append(line_name)
+                    create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
+
+                if 'dwn' in code:
+                    selected_code = 'dwn'
+                    folder_simulation = folder_dwn
+                    label_code = 'DWN'
+                    col = 'm'
+                    fmax_msdwn = fmax
+                    line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                                                      sites, label_code, col, fmin, fmax_msdwn, isource)
+                    handles_tag.append(line_name)
+                    create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
+
+                if 'esm' in code:
+                    selected_code = 'esm'
+                    label_code = 'recorded'
+                    folder_simulation = folder_esm
+                    col = 'r'
+                    fmax_esm = fmax
+                    line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                                                      sites, label_code, col, fmin, fmax_esm, isource)
+                    handles_tag.append(line_name)
+                    create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
 
                 plt.subplot(321)
                 plt.xlim(0, time_max_plot)
@@ -854,97 +799,103 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
                 plt.grid(True)
                 plt.savefig(plot_file)
                 plt.close('')
+    return
 
-        for icode in range(9):
-            #site_number lon lat peak_NS peak_EW peak_Z
-            if icode == 0:
-                if 'hisada' in code:
-                    selected_code = 'hisada'
-                    file_peaks = folder_plot + '/peaks_'+selected_code + "." + ext_out +'.txt'
-                    np.savetxt(file_peaks, peaks_hisada, fmt=fmt)
-                    plot_file_map = folder_plot + '/' + selected_code + "." + ext_out + ".png"
-                    create_figure_3plots(peaks_hisada, fault, sites, label_map, j, plot_file_map)
-                else:
-                    pass
+def create_maps_for_each_code(sites, ext_out, selected_code, folder_plot, output_folder, fault, label_map, j):
+    import os
+    import numpy as np
 
-            if icode == 1:
-                if 'speed' in code and 'stitched' not in code:
-                    selected_code = 'speed'
-                    file_peaks = folder_plot + '/peaks_'+selected_code + "." + ext_out +'.txt'
-                    np.savetxt(file_peaks, peaks_speed, fmt=fmt)
-                    plot_file_map = folder_plot + '/' + selected_code + "." + ext_out + ".png"
-                    create_figure_3plots(peaks_speed, fault, sites, label_map, j, plot_file_map)
-                else:
-                    pass
+    fmt = '%d', '%7.4f', '%7.4f', '%9.5f', '%9.5f', '%9.5f', '%9.5f'
 
-            if icode == 2:
-                if 'ucsb' in code and 'stitched' not in code:
-                    selected_code = 'ucsb'
-                    file_peaks = folder_plot + '/peaks_'+ selected_code + "." + ext_out + '.txt'
-                    np.savetxt(file_peaks, peaks_ucsb, fmt=fmt)
-                    plot_file_map = folder_plot + '/' + selected_code + "." + ext_out + ".png"
-                    create_figure_3plots(peaks_ucsb, fault, sites, label_map, j, plot_file_map)
-                else:
-                    pass
+    peaks_code = np.zeros((len(sites['ID']), 7))
+    for iobs in range(len(sites['Z'])):
+        file_single_peaks = output_folder + '/' + str(iobs) + '_peaks_' + ext_out + '_' + selected_code + '.npy'  
+        single_site = np.load(file_single_peaks)
+        peaks_code[iobs,:] = single_site 
 
-            if icode == 3:
-                if 'stitched-ucsb' in code:
-                    selected_code = 'stitched-ucsb'
-                    file_peaks = folder_plot + '/peaks_'+ selected_code + "." + ext_out + '.txt'
-                    np.savetxt(file_peaks, peaks_stitched_ucsb, fmt=fmt)
-                    plot_file_map = folder_plot + '/' + selected_code + "." + ext_out + ".png"
-                    create_figure_3plots(peaks_stitched_ucsb, fault, sites, label_map, j, plot_file_map)
-                else:
-                    pass
+    file_peaks = folder_plot + '/peaks_'+selected_code + "." + ext_out +'.txt'
+    np.savetxt(file_peaks, peaks_code, fmt=fmt)
+    plot_file_map = folder_plot + '/' + selected_code + "." + ext_out + ".png"
+    create_figure_3plots(peaks_code, fault, sites, label_map, j, plot_file_map)
+    command_rm_npy = 'rm ' + file_single_peaks
+    os.system(command_rm_npy)
+    
+    return
 
-            if icode == 4:
-                if 'stitched-speeducsb' in code:
-                    selected_code = 'stitched-speeducsb'
-                    file_peaks = folder_plot + '/peaks_'+ selected_code + "." + ext_out + '.txt'
-                    np.savetxt(file_peaks, peaks_stitched_speeducsb, fmt=fmt)
-                    plot_file_map = folder_plot + '/' + selected_code + "." + ext_out + ".png"
-                    create_figure_3plots(peaks_stitched_speeducsb, fault, sites, label_map, j, plot_file_map)
-                else:
-                    pass
 
-            if icode == 5:
-                if 'hybridmd' in code:
-                    selected_code = 'msdwn'
-                    file_peaks = folder_plot + '/peaks_'+ selected_code + "." + ext_out + '.txt'
-                    np.savetxt(file_peaks, peaks_msdwn, fmt=fmt)
-                    plot_file_map = folder_plot + '/' + selected_code + "." + ext_out + ".png"
-                    create_figure_3plots(peaks_msdwn, fault, sites, label_map, j, plot_file_map)
-                else:
-                    pass
+def create_maps(folder_plot, sites, code, output_folder, fault):
+    for j in range(3):
+        if j == 0:
+            ext_out = 'd'
+            unit_measure = 'cm'
+            label_map = 'PGD (' + unit_measure + ')'
+        if j == 1:
+            ext_out = 'v'
+            unit_measure = 'cm/s'
+            label_map = 'PGV (' + unit_measure + ')'
+        if j == 2:
+            ext_out = 'a'
+            unit_measure = 'g'
+            label_map = 'PGA (' + unit_measure + ')'
 
-            if icode == 6:
-                if 'ms' in code:
-                    selected_code = 'ms'
-                    file_peaks = folder_plot + '/peaks_'+ selected_code + "." + ext_out + '.txt'
-                    np.savetxt(file_peaks, peaks_ms, fmt=fmt)
-                    plot_file_map = folder_plot + '/' + selected_code + "." + ext_out + ".png"
-                    create_figure_3plots(peaks_ms, fault, sites, label_map, j, plot_file_map)
-                else:
-                    pass
+        #site_number lon lat peak_NS peak_EW peak_Z
+        if 'hisada' in code:
+            selected_code = 'hisada'
+            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
 
-            if icode == 7:
-                if 'dwn' in code:
-                    selected_code = 'dwn'
-                    file_peaks = folder_plot + '/peaks_'+ selected_code + "." + ext_out + '.txt'
-                    np.savetxt(file_peaks, peaks_dwn, fmt=fmt)
-                    plot_file_map = folder_plot + '/' + selected_code + "." + ext_out + ".png"
-                    create_figure_3plots(peaks_dwn, fault, sites, label_map, j, plot_file_map)
-                else:
-                    pass
+        if 'speed' in code and 'stitched' not in code:
+            selected_code = 'speed'
+            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
 
-            if icode == 8:
-                if 'esm' in code:
-                    selected_code = 'esm'
-                    file_peaks = folder_plot + '/peaks_'+ selected_code + "." + ext_out + '.txt'
-                    np.savetxt(file_peaks, peaks_esm, fmt=fmt)
-                    plot_file_map = folder_plot + '/' + selected_code + "." + ext_out + ".png"
-                    create_figure_3plots(peaks_esm, fault, sites, label_map, j, plot_file_map)
-                else:
-                    pass
+        if 'ucsb' in code and 'stitched' not in code:
+            selected_code = 'ucsb'
+            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
 
+        if 'stitched-ucsb' in code:
+            selected_code = 'stitched-ucsb'
+            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
+
+        if 'stitched-speeducsb' in code:
+            selected_code = 'stitched-speeducsb'
+            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
+
+        if 'hybridmd' in code:
+            selected_code = 'msdwn'
+            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
+
+        if 'ms' in code:
+            selected_code = 'ms'
+            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
+
+        if 'dwn' in code:
+            selected_code = 'dwn'
+            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
+
+        if 'esm' in code:
+            selected_code = 'esm'
+            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
+    return
+
+def post_processing(output_folder, plot_param, code, sites, fault, computational_param, path_data):
+    import os
+
+    folder_plot = output_folder + '/PLOT'
+    isExist = os.path.exists(folder_plot)
+    if not isExist:
+        os.makedirs(folder_plot)
+
+    folder_waveforms = folder_plot + '/WAVEFORMS'
+    isExist = os.path.exists(folder_waveforms)
+    if not isExist:
+        os.makedirs(folder_waveforms)
+
+    folder_maps = folder_plot + '/MAPS'
+    isExist = os.path.exists(folder_maps)
+    if not isExist:
+        os.makedirs(folder_maps)
+
+    create_waveforms(folder_waveforms, plot_param, code, sites, fault, computational_param, path_data, output_folder)
+    create_maps(folder_maps, sites, code, output_folder, fault)
+
+    return
 # https://sourcespec.readthedocs.io/en/latest/_modules/spectrum.html
