@@ -89,7 +89,6 @@ if __name__ == '__main__':
 
     #read settings
     settings = read_settings('settings.ini', code)
-
     path_data = settings['path_data']
 
     if calculation_mode == '--input' or calculation_mode == '--run' or calculation_mode == '--source': 
@@ -149,25 +148,25 @@ if __name__ == '__main__':
             
     layers, fault, computational_param, sites, plot_param, folder = load_inputs(fileini)
 
-    if code == 'hisada':
-        if calculation_mode == '--input':
-            create_input_hisada_run(folder, layers, fault, computational_param, sites, settings['path_code_hisada'], path_data)
-
-    if code == 'ucsb':
+    if 'ucsb' in code:
         path_code_ucsb_green_HF = settings['path_code_ucsb_green_HF']
         path_code_ucsb_green_LF = settings['path_code_ucsb_green_LF']
         if fault['IDx'] == 'Yoffe-DCF':
             path_code_ucsb = settings['path_code_ucsb_Yoffe']
         else:
             path_code_ucsb = settings['path_code_ucsb']
+        if computational_param['gf'] == 'yes':
+            green = 'green'
+        if computational_param['gf'] == 'no':
+            green = 'nogreen'
+        freq_band = computational_param['freq_band_gf']
 
+    if code == 'hisada':
+        if calculation_mode == '--input':
+            create_input_hisada_run(folder, layers, fault, computational_param, sites, settings['path_code_hisada'], path_data)
+
+    if code == 'ucsb':
         if calculation_mode != '--post':
-
-            if computational_param['gf'] == 'yes':
-                green = 'green'
-            if computational_param['gf'] == 'no':
-                green = 'nogreen'
-            freq_band = computational_param['freq_band_gf']
             create_input_ucsb_run(folder, layers, fault, computational_param, sites, path_code_ucsb,
                                 path_code_ucsb_green_HF, path_code_ucsb_green_LF, calculation_mode, green, freq_band, 
                                 path_data)
@@ -182,9 +181,16 @@ if __name__ == '__main__':
             #questo va rivisto x le due condizioni HF e LF che ora non sono contemplate
             post_processing(folder, plot_param, 'ucsb', sites, fault, computational_param, path_data)
 
+    if 'ucsb' in code and calculation_mode != '--source':
+            create_input_ucsb_run(folder, layers, fault, computational_param, sites, path_code_ucsb,
+                                path_code_ucsb_green_HF, path_code_ucsb_green_LF, calculation_mode, green, freq_band, 
+                                path_data)
+
+
     if code == 'speed':
         if calculation_mode == '--input':
             if fault['slip_mode'] == 'Archuleta':
+                settings = read_settings('settings.ini', 'ucsb')
                 if fault['IDx'] == 'Yoffe-DCF':
                     path_code_ucsb = settings['path_code_ucsb_Yoffe']
                 else:
