@@ -149,6 +149,7 @@ if __name__ == '__main__':
     layers, fault, computational_param, sites, plot_param, folder = load_inputs(fileini)
 
     if 'ucsb' in code:
+        print(computational_param['gf'])
         path_code_ucsb_green_HF = settings['path_code_ucsb_green_HF']
         path_code_ucsb_green_LF = settings['path_code_ucsb_green_LF']
         if fault['IDx'] == 'Yoffe-DCF':
@@ -181,7 +182,7 @@ if __name__ == '__main__':
             #questo va rivisto x le due condizioni HF e LF che ora non sono contemplate
             post_processing(folder, plot_param, 'ucsb', sites, fault, computational_param, path_data)
 
-    if 'ucsb' in code and calculation_mode != '--source':
+    if 'ucsb' in code and calculation_mode == '--source':
             create_input_ucsb_run(folder, layers, fault, computational_param, sites, path_code_ucsb,
                                 path_code_ucsb_green_HF, path_code_ucsb_green_LF, calculation_mode, green, freq_band, 
                                 path_data)
