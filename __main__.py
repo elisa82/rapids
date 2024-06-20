@@ -54,6 +54,7 @@ def load_inputs(fileini):
     computational_param = json.load(f)
     computational_param['optiout'] = np.asarray(computational_param['optiout'])
     computational_param['seed'] = np.asarray(computational_param['seed'])
+    computational_param['mlst'] = np.asarray(computational_param['mlst'])
 
     f = open(file_sites)
     sites = json.load(f)
@@ -94,40 +95,52 @@ if __name__ == '__main__':
         if not os.path.exists(folder):
             os.makedirs(folder)
         fault, layers = define_missing_parameters(code, layers, fault, computational_param, path_data, topo, folder, sites)
-        layers['vp'] = list(layers['vp'])
-        layers['vs'] = list(layers['vs'])
-        layers['qp'] = list(layers['qp'])
-        layers['qs'] = list(layers['qs'])
-        layers['rho'] = list(layers['rho'])
-        layers['thk'] = list(layers['thk'])
-        if layers['fqp'] is not None:
-            layers['fqp'] = list(layers['fqp'])
-        if layers['fqs'] is not None:
-            layers['fqs'] = list(layers['fqs'])
-        sites['X'] = list(sites['X'])
-        sites['Y'] = list(sites['Y'])
-        sites['Z'] = list(sites['Z'])
-        sites['ID'] = list(sites['ID'])
-        sites['lon'] = list(sites['lon'])
-        sites['lat'] = list(sites['lat'])
-        computational_param['optiout'] = list(computational_param['optiout'])
-        computational_param['seed'] = list(computational_param['seed'])
 
         file_fault_parameters = folder + '/fault_parameters.json'
         file_layers = folder + '/layers.json'
         file_sites = folder + '/sites.json'
         file_plot_param = folder + '/plot_param.json'
         file_computational_param = folder + '/computational_param.json'
-        with open(file_fault_parameters, 'w') as f:
-            json.dump(fault, f, ensure_ascii=False)
-        with open(file_layers, 'w') as f:
-            json.dump(layers, f, ensure_ascii=False)
-        with open(file_sites, 'w') as f:
-            json.dump(sites, f, ensure_ascii=False)
-        with open(file_plot_param, 'w') as f:
-            json.dump(plot_param, f, ensure_ascii=False)
-        with open(file_computational_param, 'w') as f:
-            json.dump(computational_param, f, ensure_ascii=False)
+
+        if not os.path.exists(file_fault_parameters):
+            with open(file_fault_parameters, 'w') as f:
+                json.dump(fault, f, ensure_ascii=False)
+
+        if not os.path.exists(file_layers):
+            layers['vp'] = list(layers['vp'])
+            layers['vs'] = list(layers['vs'])
+            layers['qp'] = list(layers['qp'])
+            layers['qs'] = list(layers['qs'])
+            layers['rho'] = list(layers['rho'])
+            layers['thk'] = list(layers['thk'])
+            if layers['fqp'] is not None:
+                layers['fqp'] = list(layers['fqp'])
+            if layers['fqs'] is not None:
+                layers['fqs'] = list(layers['fqs'])
+            with open(file_layers, 'w') as f:
+                json.dump(layers, f, ensure_ascii=False)
+
+        if not os.path.exists(file_sites):
+            sites['X'] = list(sites['X'])
+            sites['Y'] = list(sites['Y'])
+            sites['Z'] = list(sites['Z'])
+            sites['ID'] = list(sites['ID'])
+            sites['lon'] = list(sites['lon'])
+            sites['lat'] = list(sites['lat'])
+            with open(file_sites, 'w') as f:
+                json.dump(sites, f, ensure_ascii=False)
+
+                
+        if not os.path.exists(file_plot_param):
+            with open(file_plot_param, 'w') as f:
+                json.dump(plot_param, f, ensure_ascii=False)
+
+        if not os.path.exists(file_computational_param):
+            computational_param['optiout'] = list(computational_param['optiout'])
+            computational_param['seed'] = list(computational_param['seed'])
+            computational_param['mlst'] = list(computational_param['mlst'])
+            with open(file_computational_param, 'w') as f:
+                json.dump(computational_param, f, ensure_ascii=False)
             
     layers, fault, computational_param, sites, plot_param, folder = load_inputs(fileini)
 
