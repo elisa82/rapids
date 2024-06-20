@@ -640,7 +640,7 @@ def read_input_data(fileini, code, calculation_mode):
         computational_param['tmonitor'] = int(input['tmonitor'])
         computational_param['stoptime'] = float(input['stoptime'])
         mlst = [x.strip() for x in input['mlst'].strip('[]').split(',')]
-        computational_param['mlst'] = np.array(mlst, dtype=int)
+        computational_param['mlst'] = np.array(mlst)
         computational_param['setuponl'] = input['setuponl']
         try:
             computational_param['ndiv'] = input['ndiv']

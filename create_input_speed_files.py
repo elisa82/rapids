@@ -1481,7 +1481,7 @@ def create_input_speed_file(folder, computational_param, meshfile):
     fid.write('{}  {}\n'.format('TMONITOR', computational_param['tmonitor']))
     fid.write('{}  {}\n'.format('STOPTIME', computational_param['stoptime']))
     fid.write('{}\n'.format(''))
-    fid.write('{}   {} {}\n'.format('MLST', computational_param['mlst'][0], computational_param['mlst'][1]))
+    fid.write('{}   {} {}\n'.format('MLST', int(computational_param['mlst'][0]), int(computational_param['mlst'][1])))
     fid.write('{}  {}\n'.format('SETUPONL', computational_param['setuponl']))
     fid.close()
     return
