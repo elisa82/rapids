@@ -45,16 +45,19 @@ def load_inputs(fileini):
         layers['fqp'] = np.asarray(layers['fqp'])
     if layers['fqs'] is not None:
         layers['fqs'] = np.asarray(layers['fqs'])
+    f.close()
 
 
     f = open(file_fault_parameters)
     fault = json.load(f)
+    f.close()
 
     f = open(file_computational_param)
     computational_param = json.load(f)
     computational_param['optiout'] = np.asarray(computational_param['optiout'])
     computational_param['seed'] = np.asarray(computational_param['seed'])
     computational_param['mlst'] = np.asarray(computational_param['mlst'])
+    f.close()
 
     f = open(file_sites)
     sites = json.load(f)
@@ -64,9 +67,11 @@ def load_inputs(fileini):
     sites['ID'] = np.asarray(sites['ID'])
     sites['lon'] = np.asarray(sites['lon'])
     sites['lat'] = np.asarray(sites['lat'])
+    f.close()
 
     f = open(file_plot_param)
     plot_param = json.load(f)
+    f.close()
 
     return layers, fault, computational_param, sites, plot_param, folder
 
