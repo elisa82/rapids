@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
     path_data = settings['path_data']
 
-    if calculation_mode == '--input' or calculation_mode == '--run': 
+    if calculation_mode == '--input' or calculation_mode == '--run' or calculation_mode == '--source': 
         # read input file
         [layers, fault, computational_param, sites, plot_param, topo, folder, cineca] = \
             read_input_data(fileini, code)
