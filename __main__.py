@@ -230,8 +230,8 @@ if __name__ == '__main__':
         num_sm = 1
         stitch(folder, path_code_ucsb, computational_param, fault, sites, num_sm, code)
 
-        code = 'stitched-'+code
-        post_processing(folder, plot_param, code, sites, fault, computational_param, path_data)
+        #code = 'stitched-'+code
+        #post_processing(folder, plot_param, code, sites, fault, computational_param, path_data)
 
     if calculation_mode == '--post' and code != 'ucsb' and code != 'speed':
         post_processing(folder, plot_param, code, sites, fault, computational_param, path_data)
