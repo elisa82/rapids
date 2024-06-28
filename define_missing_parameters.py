@@ -383,6 +383,8 @@ def define_missing_parameters(code, layers, fault, computational_param, path_dat
         minlon, maxlon, minlat, maxlat = define_area_NAC1D(fault, sites, computational_param)
         NAC_PATH = path_data + '/VelModel/NAC'
         vel_model_file = folder + '/NAC_1D_selected_area.vel'
+
+        print(minlon, maxlon, minlat, maxlat)
         
         command_nac = 'python3 rapids/profilo_medio.py --out ' + vel_model_file + ' --nac_path ' + NAC_PATH + ' --z -4 60 --lon ' + str(minlon)+ ' ' + str(maxlon) + ' --lat ' + str(minlat)+ ' ' + str(maxlat) 
         os.system(command_nac)

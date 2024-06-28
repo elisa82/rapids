@@ -142,7 +142,10 @@ if __name__ == '__main__':
         if not os.path.exists(file_computational_param):
             computational_param['optiout'] = list(computational_param['optiout'])
             computational_param['seed'] = list(computational_param['seed'])
-            computational_param['mlst'] = list(computational_param['mlst'])
+            if computational_param['mlst'] is not None:
+                computational_param['mlst'] = list(computational_param['mlst'])
+            else:
+                computational_param['mlst'] = []
             with open(file_computational_param, 'w') as f:
                 json.dump(computational_param, f, ensure_ascii=False)
             
