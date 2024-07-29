@@ -16,7 +16,7 @@ def create_input_speed_run(folder, layers, fault, computational_param, sites, pa
     if not os.path.exists(folder):
         os.makedirs(folder)
     os.chdir(folder)
-    create_input_LS(folder, sites)
+    create_input_LS(folder, sites, topo, path_data, fault, computational_param)
 
     layers = redefine_layers(layers, fault, computational_param, topo)
 

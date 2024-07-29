@@ -1076,7 +1076,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     folder_mesh = folder + '/MESH'
     command_make_folder_MESH = 'mkdir -p ' + folder_mesh
     os.system(command_make_folder_MESH)
-
+    #I need to remove this since I have included it in the computation of LS
     coord1, coord2, coord3, coord4 = define_area(fault, sites, computational_param)
 
     if topo == 'yes':
@@ -1451,14 +1451,81 @@ def create_input_mate(folder, computational_param, layers, fault):
     return
 
 
-def create_input_LS(folder, sites):
+def create_input_LS(folder, sites, topo, path_data, fault, computational_param):
+    from rapids.conversions import determine_utm_coord, utm_to_lon_lat
+    import os
     fid = open(folder + '/LS.input', 'w')
     nobs = len(sites['Z'])
     fid.write('{}\n'.format(nobs))
+    if topo == 'yes':
+        path_topo = path_data+'/topo'
+        coord1, coord2, coord3, coord4 = define_area(fault, sites, computational_param)
+        temp1, temp2, zone, letter = determine_utm_coord(fault['hypo']['lon'], fault['hypo']['lat'])
+        coord1_lon, coord1_lat = utm_to_lon_lat(coord1[0], coord1[1], zone)
+        coord2_lon, coord2_lat = utm_to_lon_lat(coord2[0], coord2[1], zone)
+        coord3_lon, coord3_lat = utm_to_lon_lat(coord3[0], coord3[1], zone)
+        coord4_lon, coord4_lat = utm_to_lon_lat(coord4[0], coord4[1], zone)
+        buffer = 0.2
+        minlon = min(coord1_lon, coord2_lon, coord3_lon, coord4_lon) - buffer
+        maxlon = max(coord1_lon, coord2_lon, coord3_lon, coord4_lon) + buffer
+        minlat = min(coord1_lat, coord2_lat, coord3_lat, coord4_lat) - buffer
+        maxlat = max(coord1_lat, coord2_lat, coord3_lat, coord4_lat) + buffer
+        topo_xyz_file = folder + '/topo_reduced.xyz'
+        command_extract = 'gmt blockmean ' + path_topo + '/bedrock.xyz -R' + str(minlon) + '/' + str(
+                maxlon) + '/' + str(minlat) \
+                + '/' + str(maxlat) + ' -I15s+e/15s+e > ' + topo_xyz_file
+        os.system(command_extract)
+        elevation = compute_elevation(sites, topo_xyz_file)
+    else:
+        elevation = np.zeros((nobs))
+        for k in range(nobs):
+            elevation[k] = sites['Z'][k]
     for k in range(nobs):
-        fid.write('{} {} {} {}\n'.format(k + 1, sites['Y'][k], sites['X'][k], sites['Z'][k]))
+        fid.write('{} {} {} {}\n'.format(k + 1, sites['Y'][k], sites['X'][k], elevation[k]))
     fid.close()
     return
+
+
+def haversine_np(lon1, lat1, lon2, lat2):
+    import numpy as np
+    """
+    Calculate the great circle distance between two points
+    on the earth (specified in decimal degrees)
+    Reference:
+        https://stackoverflow.com/a/29546836/7657658
+    """
+    lon1, lat1, lon2, lat2 = map(np.radians, [lon1, lat1, lon2, lat2])
+
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+
+    a = np.sin(
+        dlat / 2.0)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2.0)**2
+
+    c = 2 * np.arcsin(np.sqrt(a))
+    km = 6371 * c
+    return km
+
+
+def compute_elevation(sites, file_topo):
+    import pandas as pd
+    import numpy as np
+    nobs = len(sites['Z'])
+    elevation = np.zeros((nobs))
+    topo_val = pd.read_csv(file_topo, sep='\t', names = ['lon','lat','elev']) 
+    topo_lat = topo_val['lat']
+    topo_lon = topo_val['lon']
+    topo_elev = topo_val['elev']
+    for k in range(nobs):
+        dist_min = 9999999.
+        index_min = np.nan
+        for i in range(len(topo_lat)):
+            dist_topo_val = haversine_np(sites['lon'][k], sites['lat'][k], topo_lon[i], topo_lat[i])
+            if dist_topo_val < dist_min:
+                dist_min = dist_topo_val
+                index_min = i
+        elevation[k] = topo_elev[index_min]
+    return elevation
 
 
 def create_input_speed_file(folder, computational_param, meshfile):
