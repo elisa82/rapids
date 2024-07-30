@@ -90,6 +90,7 @@ if __name__ == '__main__':
     #read settings
     settings = read_settings('settings.ini', code)
     path_data = settings['path_data']
+    #sistemare la lettura dei settings
 
     if calculation_mode == '--input' or calculation_mode == '--run' or calculation_mode == '--source': 
         # read input file
@@ -205,8 +206,10 @@ if __name__ == '__main__':
                     create_input_ucsb_run(folder, layers, fault, computational_param, sites,
                                       path_code_ucsb, path_code_ucsb_green_HF, path_code_ucsb_green_LF, '--source', 'nogreen', 
                                       [], path_data) 
+            settings = read_settings('settings.ini', 'speed')
+            path_cubit = settings['path_cubit']
             create_input_speed_run(folder, layers, fault, computational_param, sites, settings['path_code_speed'],
-                                   topo, settings['path_cubit'], cineca, path_data)
+                                   topo, path_cubit, cineca, path_data)
 
         if calculation_mode == '--post':
             speed2ascii(folder, sites)
