@@ -1,5 +1,6 @@
 def create_input_speed_run(folder, layers, fault, computational_param, sites, path_code, topo,
                             path_cubit, cineca, path_data):
+
     import os
     from rapids.create_input_speed_files import create_input_mate
     from rapids.create_input_speed_files import create_input_LS

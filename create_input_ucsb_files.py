@@ -208,7 +208,7 @@ def create_Green(folder, computational_param, fault, sites, type_green):
     dep_max = fault['max_fault_depth'] + dep_step * 2
     dep_min = fault['Ztor'] - 1
     if dep_min < 0:
-        dep_min = 0.0005
+        dep_min = 0.5
 
     fid.write('{} {} {}\n'.format(dep_max, dep_min, dep_step))
     fault['number_subfaults_strike'] = int(2 ** math.ceil(math.log(fault['length'] / fault['subfault_length'] + 1, 2)))
@@ -236,7 +236,7 @@ def create_Green(folder, computational_param, fault, sites, type_green):
     dist_max = (np.max(dist)+1000) / 1000
     dist_min = (np.min(dist)-1000) / 1000
     if dist_min < 0:
-        dist_min = 0.0005
+        dist_min = 0.5
     d_step = 2
     # N.B. dist max and dist min are only approssimative, nn tengono conto dell'effettiva orientazione della faglia e posizione ipocentro sul piano di faglia
     fid.write('{} {} {}\n'.format(dist_max, dist_min, d_step))

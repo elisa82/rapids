@@ -363,14 +363,14 @@ def plot_selected_code(selected_code, folder_simulation, iobs, desired_output, s
     return line_name, peaks
 
 
-def integr_accel(A, dt):
+def compute_integral_2(A, dt):
     import numpy as np
     # Starting from a ground acceleration records calculate
     # ground velocities and displacement from the integrations
     # of the acceleration
 
     v = np.zeros(A.size)
-    u = np.zeros(A.size)
+    #u = np.zeros(A.size)
 
     # NB le formule implementate prima del 19/10/2005 utilizzavano beta =1/6
     # con le quali si ottengono risultati no stabili per dt maggiori di
@@ -382,12 +382,13 @@ def integr_accel(A, dt):
     beta = 1. / 4.
     for i in range(1, len(A), 1):
         v[i] = v[i - 1] + (1 - gamma) * dt * A[i - 1] + gamma * dt * A[i]
-        u[i] = u[i - 1] + dt * v[i - 1] + (1. / 2. - beta) * dt ** 2 * A[i - 1] + beta * dt ** 2 * A[i]
+        #u[i] = u[i - 1] + dt * v[i - 1] + (1. / 2. - beta) * dt ** 2 * A[i - 1] + beta * dt ** 2 * A[i]
 
     vel = v
-    disp = u
+    #disp = u
 
-    return vel, disp
+    #return vel, disp
+    return vel
 
 
 def compute_Repi(sites, fault):
@@ -430,6 +431,7 @@ def define_selected_time_history(selected_code, folder_simulation, nobs, desired
     from obspy.core import read
     from rapids.conversions import write_uscb_format
     import glob
+    from scipy.integrate import cumtrapz
 
     output_type = 'vel'
 
@@ -469,13 +471,14 @@ def define_selected_time_history(selected_code, folder_simulation, nobs, desired
         else:
             sig_vel = time_series.data[tshift : npts + tshift]  # cm/s2
 
-        sig_disp = compute_integral(sig_vel, dt)
+        sig_disp = cumtrapz(sig_vel, time, initial=0)
+        #sig_disp = compute_integral(sig_vel, dt)
         sig_acc = compute_derivative(sig_vel, dt)
 
         filename_out = folder_simulation + "/" + sites['ID'][nobs] + "." + comp_str_out + ".gm1D." + str(isource).zfill(3)
         write_uscb_format(filename_out, npts, dt, sig_vel)
 
-    if selected_code == 'ucsb' or selected_code == 'speed' or selected_code == 'stitched-ucsb' or selected_code == 'stitched-speeducsb':
+    if selected_code == 'ucsb' or selected_code == 'speed' or selected_code == 'stitched-U' or selected_code == 'stitched-SU':
         if comp == 'NS':
             comp_str = '000'
         if comp == 'EW':
@@ -486,7 +489,7 @@ def define_selected_time_history(selected_code, folder_simulation, nobs, desired
             filename = folder_simulation + "/" + sites['ID'][nobs] + "." + comp_str + ".gm1D." + str(isource).zfill(3)
         if selected_code == 'speed':
             filename = folder_simulation + "/" + sites['ID'][nobs] + "." + comp_str + ".gm3D." + str(isource).zfill(3)
-        if selected_code == 'stitched-ucsb' or selected_code == 'stitched-speeducsb':
+        if selected_code == 'stitched-U' or selected_code == 'stitched-SU':
             filename = folder_simulation + "/" + sites['ID'][nobs] + "." + comp_str + ".gmBB." + str(isource).zfill(3)
         time_series = []
         with open(filename, 'r') as f:
@@ -510,12 +513,15 @@ def define_selected_time_history(selected_code, folder_simulation, nobs, desired
         if output_type == 'acc':
             #sig_acc = time_series.data * 100
             sig_acc = time_series * 100
-            sig_vel = compute_integral(sig_acc, dt)
-            sig_disp = compute_integral(sig_vel, dt)
+            sig_vel = cumtrapz(sig_acc, time, initial=0)
+            #sig_vel = compute_integral(sig_acc, dt)
+            sig_disp = cumtrapz(sig_vel, time, initial=0)
+            #sig_disp = compute_integral(sig_vel, dt)
         if output_type == 'vel':
             #sig_vel = time_series.data * 100
             sig_vel = time_series * 100
-            sig_disp = compute_integral(sig_vel, dt)
+            sig_disp = cumtrapz(sig_vel, time, initial=0)
+            #sig_disp = compute_integral(sig_vel, dt)
             sig_acc = compute_derivative(sig_vel, dt)
         if output_type == 'dis':
             #sig_disp = time_series.data * 100
@@ -538,7 +544,8 @@ def define_selected_time_history(selected_code, folder_simulation, nobs, desired
         if comp == 'Z':
             sig_vel = - sig_vel
         sig_acc = compute_derivative(sig_vel, dt)
-        sig_disp = compute_integral(sig_vel, dt)
+        sig_disp = cumtrapz(sig_vel, time, initial=0)
+        #sig_disp = compute_integral(sig_vel, dt)
 
     if selected_code == 'esm':
         event = '20240327_0000228'
@@ -553,8 +560,10 @@ def define_selected_time_history(selected_code, folder_simulation, nobs, desired
         dt = time[1]-time[0]
         for i in range(len(time)):
             time[i] = time[i] - 17
-        sig_vel = compute_integral(sig_acc, dt)
-        sig_disp = compute_integral(sig_vel, dt)
+        sig_vel = cumtrapz(sig_acc, time, initial=0)
+        #sig_vel = compute_integral(sig_acc, dt)
+        sig_disp = cumtrapz(sig_vel, time, initial=0)
+        #sig_disp = compute_integral(sig_vel, dt)
 
     if desired_output == 0:
         sig = sig_disp
@@ -671,7 +680,7 @@ def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_
                     handles_tag.append(line_name)
                     create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
 
-                if 'speed' in code and 'stitched' not in code:
+                if 'speed' in code:
                     selected_code = 'speed'
                     folder_simulation = folder_speed
                     label_code = 'SPEED'
@@ -685,11 +694,11 @@ def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_
                     handles_tag.append(line_name)
                     create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
 
-                if 'ucsb' in code and 'stitched' not in code:
+                if 'ucsb' in code:
                     selected_code = 'ucsb'
                     folder_simulation = folder_ucsb
                     label_code = 'UCSB'
-                    col = 'k'
+                    col = 'r'
                     if fmax is not None and computational_param['fmax_ucsb'] < fmax:
                         fmax_ucsb = computational_param['fmax_ucsb']
                     else:
@@ -699,8 +708,8 @@ def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_
                     handles_tag.append(line_name)
                     create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
 
-                if 'stitched-ucsb' in code:
-                    selected_code = 'stitched-ucsb'
+                if 'stitched-U' in code:
+                    selected_code = 'stitched-U'
                     folder_simulation = folder_stitched_ucsb
                     label_code = 'STITCHED-UCSB'
                     col = 'k'
@@ -713,8 +722,8 @@ def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_
                     handles_tag.append(line_name)
                     create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
 
-                if 'stitched-speeducsb' in code:
-                    selected_code = 'stitched-speeducsb'
+                if 'stitched-SU' in code:
+                    selected_code = 'stitched-SU'
                     folder_simulation = folder_stitched_speeducsb
                     label_code = 'STITCHED-SPEEDUCSB'
                     col = 'k'
@@ -843,20 +852,20 @@ def create_maps(folder_plot, sites, code, output_folder, fault):
             selected_code = 'hisada'
             create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
 
-        if 'speed' in code and 'stitched' not in code:
+        if 'speed' in code:
             selected_code = 'speed'
             create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
 
-        if 'ucsb' in code and 'stitched' not in code:
+        if 'ucsb' in code:
             selected_code = 'ucsb'
             create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
 
-        if 'stitched-ucsb' in code:
-            selected_code = 'stitched-ucsb'
+        if 'stitched-U' in code:
+            selected_code = 'stitched-U'
             create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
 
-        if 'stitched-speeducsb' in code:
-            selected_code = 'stitched-speeducsb'
+        if 'stitched-SU' in code:
+            selected_code = 'stitched-SU'
             create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
 
         if 'hybridmd' in code:
@@ -886,6 +895,8 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
 
     folder_waveforms = folder_plot + '/WAVEFORMS'
     isExist = os.path.exists(folder_waveforms)
+    print(folder_waveforms)
+    print(isExist)
     if not isExist:
         os.makedirs(folder_waveforms)
 
