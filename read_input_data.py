@@ -451,12 +451,18 @@ def read_input_data(fileini, code):
         try:
             fault['hypo_along_strike'] = float(input['hypo_along_strike'])
         except KeyError:
-            pass
+            if input['hypo_along_strike'] == 'MT':
+                fault['hypo_along_strike'] = 0.5
+            else:
+                pass
 
         try:
             fault['hypo_down_dip'] = float(input['hypo_down_dip'])
         except KeyError:
-            pass
+            if input['hypo_down_dip'] == 'MT':
+                fault['hypo_down_dip'] = 0.5
+            else:
+                pass
 
     try:
         fault['IDx'] = input['STF']
@@ -471,7 +477,10 @@ def read_input_data(fileini, code):
     try:
         fault['percentage_rupture_velocity'] = float(input['percentage_rupture_velocity'])
     except KeyError:
-        pass
+        if input['percentage_rupture_velocity'] == 'default':
+            fault['percentage_rupture_velocity'] = 0.8
+        else:
+            pass
 
     try:
         fault['rise_time'] = float(input['rise_time'])
@@ -540,8 +549,17 @@ def read_input_data(fileini, code):
         computational_param['fmax_hisada'] = float(input['fmax_hisada'])
         computational_param['dt_hisada'] = float(input['dt_hisada'])
 
+
+#Malagnini, L., Akinci, A., Herrmann, R., Pino, N. & Scognamiglio, L., 2002.
+#Characteristics of the ground motion in northeastern Italy, Bull. seism.
+#Soc. Am., 92, 2186–2204.    
+#Malagnini et al. (2002) obtained Q(f) = 260f^0.55 based on spectral inversion for an area extending from Slovenia to Friuli Venezia Giulia.
+
     if 'ucsb' in code:
-        computational_param['kappa'] = float(input['kappa'])
+        if input['kappa'] == 'average_Friuli':
+            computational_param['kappa'] = 0.025
+        else:
+            computational_param['kappa'] = float(input['kappa'])
         computational_param['npts_ucsb'] = int(input['npts_ucsb'])
         computational_param['qzero'] = float(input['qzero'])
         computational_param['alpha'] = float(input['alpha'])
@@ -559,6 +577,8 @@ def read_input_data(fileini, code):
 
     try:
         receiver_grid_step_km = float(input['site_grid_step_km'])
+        if receiver_grid_step_km == 'default':
+            receiver_grid_step_km = 2.5
         try:
             receiver_maximum_dist = input['site_maximum_dist_km']
             if receiver_maximum_dist == 'default':
