@@ -180,7 +180,7 @@ if __name__ == '__main__':
             if 'LF' in computational_param['freq_band_gf'] and 'HF' in computational_param['freq_band_gf']:
                 num_sm = 1
                 stitch(folder, path_code_ucsb, computational_param, fault, sites, num_sm, code)
-                post_processing(folder, plot_param, 'stitched-ucsb', sites, fault, computational_param, path_data)
+                post_processing(folder, plot_param, 'stitched-U', sites, fault, computational_param, path_data)
 
         if calculation_mode == '--post':
             #questo va rivisto x le due condizioni HF e LF che ora non sono contemplate

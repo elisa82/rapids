@@ -218,8 +218,6 @@ def define_missing_parameters(code, layers, fault, computational_param, path_dat
     from rapids.conversions import utm_to_lon_lat
     import os
 
-
-
     if fault['Mo'] is None and fault['Mw'] is not None:
         fault['Mo'] = 10. ** (1.5 * (fault['Mw']) + 9.05)  # in Nm Hanks & Kanamori (1979)
 
