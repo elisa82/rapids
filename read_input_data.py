@@ -449,20 +449,22 @@ def read_input_data(fileini, code):
 
         #Lo zero della faglia è sempre in alto a sinistra, ma attenzione allo strike!
         try:
-            fault['hypo_along_strike'] = float(input['hypo_along_strike'])
-        except KeyError:
-            if input['hypo_along_strike'] == 'MT':
+            hyp_s = input['hypo_along_strike']
+            if hyp_s == 'MT':
                 fault['hypo_along_strike'] = 0.5
             else:
-                pass
+                fault['hypo_along_strike'] = float(hyp_s)
+        except KeyError:
+            fault['hypo_along_strike'] = 0.5
 
         try:
-            fault['hypo_down_dip'] = float(input['hypo_down_dip'])
-        except KeyError:
-            if input['hypo_down_dip'] == 'MT':
+            hyp_d = input['hypo_down_dip']
+            if hyp_d == 'MT':
                 fault['hypo_down_dip'] = 0.5
             else:
-                pass
+                fault['hypo_down_dip'] = float(hyp_d)
+        except KeyError:
+            fault['hypo_down_dip'] = 0.5
 
     try:
         fault['IDx'] = input['STF']
@@ -475,12 +477,13 @@ def read_input_data(fileini, code):
         pass
 
     try:
-        fault['percentage_rupture_velocity'] = float(input['percentage_rupture_velocity'])
-    except KeyError:
-        if input['percentage_rupture_velocity'] == 'default':
+        perc_rup_vel = input['percentage_rupture_velocity']
+        if perc_rup_vel == 'default':
             fault['percentage_rupture_velocity'] = 0.8
         else:
-            pass
+            fault['percentage_rupture_velocity'] = float(perc_rup_vel)
+    except KeyError:
+        pass
 
     try:
         fault['rise_time'] = float(input['rise_time'])
@@ -576,9 +579,11 @@ def read_input_data(fileini, code):
             pass
 
     try:
-        receiver_grid_step_km = float(input['site_grid_step_km'])
+        receiver_grid_step_km = input['site_grid_step_km']
         if receiver_grid_step_km == 'default':
             receiver_grid_step_km = 2.5
+        else:
+            receiver_grid_step_km = float(receiver_grid_step_km)
         try:
             receiver_maximum_dist = input['site_maximum_dist_km']
             if receiver_maximum_dist == 'default':
