@@ -1454,9 +1454,8 @@ def create_input_mate(folder, computational_param, layers, fault):
 def create_input_LS(folder, sites, topo, path_data, fault, computational_param):
     from rapids.conversions import determine_utm_coord, utm_to_lon_lat
     import os
-    fid = open(folder + '/LS.input', 'w')
+    import numpy as np
     nobs = len(sites['Z'])
-    fid.write('{}\n'.format(nobs))
     if topo == 'yes':
         path_topo = path_data+'/topo'
         coord1, coord2, coord3, coord4 = define_area(fault, sites, computational_param)
@@ -1480,10 +1479,36 @@ def create_input_LS(folder, sites, topo, path_data, fault, computational_param):
         elevation = np.zeros((nobs))
         for k in range(nobs):
             elevation[k] = sites['Z'][k]
+
+    fid = open(folder + '/LS.input', 'w')
+    fid.write('{}\n'.format(nobs))
     for k in range(nobs):
         fid.write('{} {} {} {}\n'.format(k + 1, sites['Y'][k], sites['X'][k], elevation[k]))
     fid.close()
+
     return
+
+
+def compute_elevation(sites, file_topo):
+    import pandas as pd
+    import numpy as np
+    from scipy.spatial import cKDTree
+
+    topo_val = pd.read_csv(file_topo, sep='\t', names = ['lon','lat','elev'])
+
+    sites_coords = np.vstack((sites['lat'], sites['lon'])).T
+    topo_coords = np.vstack((topo_val['lat'], topo_val['lon'])).T
+    
+    # Build a KDTree for efficient nearest neighbor search
+    tree = cKDTree(topo_coords)
+    
+    # Query the KDTree to find the index of the nearest topo point for each site
+    _, nearest_idx = tree.query(sites_coords, k=1)
+    
+    # Get the elevation corresponding to the nearest topo point for each site
+    elevation = topo_val['elev'].values[nearest_idx]
+
+    return elevation
 
 
 def haversine_np(lon1, lat1, lon2, lat2):
@@ -1505,28 +1530,6 @@ def haversine_np(lon1, lat1, lon2, lat2):
     c = 2 * np.arcsin(np.sqrt(a))
     km = 6371 * c
     return km
-
-
-def compute_elevation(sites, file_topo):
-    import pandas as pd
-    import numpy as np
-    nobs = len(sites['Z'])
-    elevation = np.zeros((nobs))
-    topo_val = pd.read_csv(file_topo, sep='\t', names = ['lon','lat','elev']) 
-    topo_lat = topo_val['lat']
-    topo_lon = topo_val['lon']
-    topo_elev = topo_val['elev']
-    for k in range(nobs):
-        dist_min = 9999999.
-        index_min = np.nan
-        for i in range(len(topo_lat)):
-            dist_topo_val = haversine_np(sites['lon'][k], sites['lat'][k], topo_lon[i], topo_lat[i])
-            if dist_topo_val < dist_min:
-                dist_min = dist_topo_val
-                index_min = i
-        elevation[k] = topo_elev[index_min]
-    return elevation
-
 
 def create_input_speed_file(folder, computational_param, meshfile):
     fid = open(folder + '/SPEED.input', 'w')
