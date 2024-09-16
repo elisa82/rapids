@@ -180,11 +180,34 @@ if __name__ == '__main__':
             if 'LF' in computational_param['freq_band_gf'] and 'HF' in computational_param['freq_band_gf']:
                 num_sm = 1
                 stitch(folder, path_code_ucsb, computational_param, fault, sites, num_sm, code)
-                post_processing(folder, plot_param, 'stitched-U', sites, fault, computational_param, path_data)
+                
+                try:
+                    from mpi4py import MPI
+                    comm  = MPI.COMM_WORLD
+                    rank  = comm.Get_rank()
+                    nranks =comm.size
+
+                except:
+                    rank   = 0
+                    nranks = 1
+                    comm = None
+
+                post_processing(folder, plot_param, 'stitched-U', sites, fault, computational_param, path_data, comm)
 
         if calculation_mode == '--post':
             #questo va rivisto x le due condizioni HF e LF che ora non sono contemplate
-            post_processing(folder, plot_param, 'ucsb', sites, fault, computational_param, path_data)
+            try:
+                from mpi4py import MPI
+                comm  = MPI.COMM_WORLD
+                rank  = comm.Get_rank()
+                nranks =comm.size
+
+            except:
+                rank   = 0
+                nranks = 1
+                comm = None
+
+            post_processing(folder, plot_param, 'ucsb', sites, fault, computational_param, path_data, comm)
 
     if 'ucsb' in code and calculation_mode == '--source':
             create_input_ucsb_run(folder, layers, fault, computational_param, sites, path_code_ucsb,
@@ -213,7 +236,19 @@ if __name__ == '__main__':
 
         if calculation_mode == '--post':
             speed2ascii(folder, sites)
-            post_processing(folder, plot_param, code, sites, fault, computational_param, path_data)
+
+            try:
+                from mpi4py import MPI
+                comm  = MPI.COMM_WORLD
+                rank  = comm.Get_rank()
+                nranks =comm.size
+
+            except:
+                rank   = 0
+                nranks = 1
+                comm = None
+
+            post_processing(folder, plot_param, code, sites, fault, computational_param, path_data, comm)
 
 
     #with open(folder + '/sites.obs', 'w') as f:
@@ -240,7 +275,18 @@ if __name__ == '__main__':
         #post_processing(folder, plot_param, code, sites, fault, computational_param, path_data)
 
     if calculation_mode == '--post' and code != 'ucsb' and code != 'speed':
-        post_processing(folder, plot_param, code, sites, fault, computational_param, path_data)
+        try:
+            from mpi4py import MPI
+            comm  = MPI.COMM_WORLD
+            rank  = comm.Get_rank()
+            nranks =comm.size
+
+        except:
+            rank   = 0
+            nranks = 1
+            comm = None
+
+        post_processing(folder, plot_param, code, sites, fault, computational_param, path_data, comm)
 
 
 # 	HYPO_DOWN_DIP=position_along_width*width

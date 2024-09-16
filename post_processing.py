@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+
 def strtoint(sf):
     """
 
@@ -186,7 +187,7 @@ def read_esm(filename_in):
 
     return time, np.asarray(acc_data)
 
-def create_single_map(peak_all, minlon, maxlon, minlat, maxlat, comp, bounds, fault, label):
+def create_single_map(intensity_measure_all, minlon, maxlon, minlat, maxlat, comp, bounds, fault, label):
     import matplotlib.pylab as plt
     import numpy as np
     from mpl_toolkits.basemap import Basemap
@@ -197,9 +198,9 @@ def create_single_map(peak_all, minlon, maxlon, minlat, maxlat, comp, bounds, fa
     aspect = 20
     pad_fraction = 0.5
 
-    lon = peak_all[:, 1]
-    lat = peak_all[:, 2]
-    val = peak_all[:, 3 + comp]
+    lon = intensity_measure_all[:, 1]
+    lat = intensity_measure_all[:, 2]
+    val = intensity_measure_all[:, 3 + comp]
 
     # create map
     map = Basemap(projection='merc', resolution='i', llcrnrlon=minlon, llcrnrlat=minlat,
@@ -242,7 +243,7 @@ def create_single_map(peak_all, minlon, maxlon, minlat, maxlat, comp, bounds, fa
     return
 
 
-def create_figure_3plots(peak_all, fault, sites, label_map, desired_output, plot_file_map):
+def create_figure_3plots(intensity_measure_all, fault, sites, label_map, desired_output, plot_file_map):
     import matplotlib.pylab as plt
     import numpy as np
 
@@ -265,6 +266,9 @@ def create_figure_3plots(peak_all, fault, sites, label_map, desired_output, plot
     if desired_output == 2:
         vmax = 1.
         bounds = np.array([0.000555, 0.00232, 0.0121, 0.0338, 0.0746, 0.145, 0.261, 0.444, 0.723, 1.138])
+    if desired_output == 3:
+        vmax = 1.
+        bounds = np.array([0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 3.5])
 
     for k in range(3):
         if k == 0:
@@ -275,7 +279,7 @@ def create_figure_3plots(peak_all, fault, sites, label_map, desired_output, plot
             label_comp = 'Z'
 
         plt.subplot(2, 2, k + 1)
-        create_single_map(peak_all, minlon, maxlon, minlat, maxlat, k, bounds, fault, label_map)
+        create_single_map(intensity_measure_all, minlon, maxlon, minlat, maxlat, k, bounds, fault, label_map)
         plt.title(label_comp)
     plt.tight_layout()
     plt.savefig(plot_file_map)
@@ -331,9 +335,10 @@ def plot_selected_code(selected_code, folder_simulation, iobs, desired_output, s
     import matplotlib.pylab as plt
     import numpy as np
 
-    peaks = np.zeros(4)
+    peaks = np.zeros(3)
+    arias_intensity = np.zeros(3)
 
-    time, signal_filtered, fft, xf, peaks[0] = \
+    time, signal_filtered, fft, xf, peaks[0], arias_intensity[0] = \
         define_selected_time_history(selected_code, folder_simulation, iobs, desired_output, 'NS', sites,
                                      fmin, fmax, isource)
     plt.subplot(321)
@@ -342,7 +347,7 @@ def plot_selected_code(selected_code, folder_simulation, iobs, desired_output, s
 
     plt.loglog(xf, fft, col, linewidth=0.4)
 
-    time, signal_filtered, fft, xf, peaks[1] = \
+    time, signal_filtered, fft, xf, peaks[1], arias_intensity[1] = \
         define_selected_time_history(selected_code, folder_simulation, iobs, desired_output, 'EW', sites,
                                      fmin, fmax, isource)
     plt.subplot(323)
@@ -350,7 +355,7 @@ def plot_selected_code(selected_code, folder_simulation, iobs, desired_output, s
     plt.subplot(324)
     plt.loglog(xf, fft, col, linewidth=0.4)
 
-    time, signal_filtered, fft, xf, peaks[2] = \
+    time, signal_filtered, fft, xf, peaks[2], arias_intensity[2] = \
         define_selected_time_history(selected_code, folder_simulation, iobs, desired_output, 'Z', sites,
                                      fmin, fmax, isource)
     plt.subplot(325)
@@ -358,9 +363,7 @@ def plot_selected_code(selected_code, folder_simulation, iobs, desired_output, s
     plt.subplot(326)
     plt.loglog(xf, fft, col, linewidth=0.4)
 
-    peaks[3] = np.sqrt(peaks[0]**2+peaks[1]**2)
-
-    return line_name, peaks
+    return line_name, peaks, arias_intensity
 
 
 def compute_integral_2(A, dt):
@@ -432,6 +435,7 @@ def define_selected_time_history(selected_code, folder_simulation, nobs, desired
     from rapids.conversions import write_uscb_format
     import glob
     from scipy.integrate import cumtrapz
+    import math
 
     output_type = 'vel'
 
@@ -577,7 +581,15 @@ def define_selected_time_history(selected_code, folder_simulation, nobs, desired
     signal_filtered, fft, xf = prepare_signal(sig, dt, fmin, fmax)
     peak = np.max(np.abs(signal_filtered))
 
-    return time, signal_filtered, fft, xf, peak
+    arias_intensity = 0
+    if desired_output == 2:
+        signal_acc_cms2 = signal_filtered * 981
+        integrand = 0
+        for i in range(len(signal_acc_cms2)):
+            integrand += signal_acc_cms2[i]**2*dt
+        arias_intensity = math.pi /(2*981) * integrand
+
+    return time, signal_filtered, fft, xf, peak, arias_intensity
 
 
 def do_fft(sig, delta):
@@ -610,19 +622,19 @@ def prepare_signal(sig, dt, fmin, fmax):
     return signal_filtered, signal_fft, xf
 
 
-def create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder):
+def create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out, selected_code, intensity_measure, output_folder):
     import numpy as np
-    single_peaks = np.zeros((7))
+    single_peaks = np.zeros((6))
     single_peaks[0] = iobs+1
     single_peaks[1] = sites['lon'][iobs]
     single_peaks[2] = sites['lat'][iobs]
-    single_peaks[3: 7] = peaks
-    file_single_peaks = output_folder + '/' + str(iobs) + '_peaks_' + ext_out + '_' + selected_code + '.npy'
+    single_peaks[3: 6] = intensity_measure
+    file_single_peaks = output_folder + '/' + str(iobs) + '_' + ext_out + '_' + selected_code + '.npy'
     np.save(file_single_peaks, single_peaks)
     return
 
 
-def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_param, path_data, output_folder):
+def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_param, path_data, output_folder, rank=0, nranks=1):
     import matplotlib.pylab as plt
     import numpy as np
 
@@ -643,19 +655,24 @@ def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_
 
     Repi = compute_Repi(sites, fault)
 
-
     #for iobs in range(1):
-    for iobs in range(len(sites['Z'])):
+    Nsites = len(sites['Z'])
+    Site_Indexes=np.arange(Nsites)
+
+    for iobs in Site_Indexes[rank::nranks]:
+        print("rank %d works on site %d"  %(rank,iobs))
         for j in range(3):
             if j == 0:
-                ext_out = 'd'
-                unit_measure = 'cm'
+                ext_out1 = 'pgd'
+                unit_measure1 = 'cm'
             if j == 1:
-                ext_out = 'v'
-                unit_measure = 'cm/s'
+                ext_out1 = 'pgv'
+                unit_measure1 = 'cm/s'
             if j == 2:
-                ext_out = 'a'
-                unit_measure = 'g'
+                ext_out1 = 'pga'
+                unit_measure1 = 'g'
+                ext_out2 = 'ai'
+                unit_measure1 = 'cm/2'
             if fault['IDx'] == 'Yoffe-DCF':
                 num_realizations = 1
             else:
@@ -675,10 +692,13 @@ def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_
                         fmax_hisada = computational_param['fmax_hisada']
                     else:
                         fmax_hisada = fmax
-                    line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                    line_name, peaks, arias_intensity = plot_selected_code(selected_code, folder_simulation, iobs, j,
                                                       sites, label_code, col, fmin, fmax_hisada, isource)
                     handles_tag.append(line_name)
-                    create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
+                    create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out1, selected_code, peaks, output_folder)
+                    if j == 2:
+                        create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out2, selected_code, arias_intensity, output_folder)
+
 
                 if 'speed' in code:
                     selected_code = 'speed'
@@ -689,10 +709,12 @@ def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_
                         fmax_speed = computational_param['fmax_speed']
                     else:
                         fmax_speed = fmax
-                    line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                    line_name, peaks, arias_intensity = plot_selected_code(selected_code, folder_simulation, iobs, j,
                                                       sites, label_code, col, fmin, fmax_speed, isource)
                     handles_tag.append(line_name)
-                    create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
+                    create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out1, selected_code, peaks, output_folder)
+                    if j == 2:
+                        create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out2, selected_code, arias_intensity, output_folder)
 
                 if 'ucsb' in code:
                     selected_code = 'ucsb'
@@ -703,10 +725,12 @@ def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_
                         fmax_ucsb = computational_param['fmax_ucsb']
                     else:
                         fmax_ucsb = fmax
-                    line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                    line_name, peaks, arias_intensity = plot_selected_code(selected_code, folder_simulation, iobs, j,
                                                       sites, label_code, col, fmin, fmax_ucsb, isource)
                     handles_tag.append(line_name)
-                    create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
+                    create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out1, selected_code, peaks, output_folder)
+                    if j == 2:
+                        create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out2, selected_code, arias_intensity, output_folder)
 
                 if 'stitched-U' in code:
                     selected_code = 'stitched-U'
@@ -717,10 +741,12 @@ def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_
                         fmax_stitched_ucsb = computational_param['fmax_ucsb'] #stitched è uguale ad ucsb
                     else:
                         fmax_stitched_ucsb = fmax
-                    line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                    line_name, peaks, arias_intensity = plot_selected_code(selected_code, folder_simulation, iobs, j,
                                                       sites, label_code, col, fmin, fmax_stitched_ucsb, isource)
                     handles_tag.append(line_name)
-                    create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
+                    create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out1, selected_code, peaks, output_folder)
+                    if j == 2:
+                        create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out2, selected_code, arias_intensity, output_folder)
 
                 if 'stitched-SU' in code:
                     selected_code = 'stitched-SU'
@@ -731,10 +757,12 @@ def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_
                         fmax_stitched_speeducsb = computational_param['fmax_ucsb'] #stitched è uguale ad ucsb
                     else:
                         fmax_stitched_speeducsb = fmax
-                    line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                    line_name, peaks, arias_intensity = plot_selected_code(selected_code, folder_simulation, iobs, j,
                                                       sites, label_code, col, fmin, fmax_stitched_speeducsb, isource)
                     handles_tag.append(line_name)
-                    create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
+                    create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out1, selected_code, peaks, output_folder)
+                    if j == 2:
+                        create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out2, selected_code, arias_intensity, output_folder)
 
                 if 'hybridmd' in code:
                     selected_code = 'msdwn'
@@ -742,10 +770,12 @@ def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_
                     label_code = 'MS-DWN'
                     col = 'k'
                     fmax_msdwn = fmax
-                    line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                    line_name, peaks, arias_intensity = plot_selected_code(selected_code, folder_simulation, iobs, j,
                                                       sites, label_code, col, fmin, fmax_msdwn, isource)
                     handles_tag.append(line_name)
-                    create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
+                    create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out1, selected_code, peaks, output_folder)
+                    if j == 2:
+                        create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out2, selected_code, arias_intensity, output_folder)
 
                 if 'ms' in code:
                     selected_code = 'ms'
@@ -753,10 +783,12 @@ def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_
                     label_code = 'MS'
                     col = 'cyan'
                     fmax_msdwn = fmax
-                    line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                    line_name, peaks, arias_intensity = plot_selected_code(selected_code, folder_simulation, iobs, j,
                                                       sites, label_code, col, fmin, fmax_msdwn, isource)
                     handles_tag.append(line_name)
-                    create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
+                    create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out1, selected_code, peaks, output_folder)
+                    if j == 2:
+                        create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out2, selected_code, arias_intensity, output_folder)
 
                 if 'dwn' in code:
                     selected_code = 'dwn'
@@ -764,10 +796,12 @@ def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_
                     label_code = 'DWN'
                     col = 'm'
                     fmax_msdwn = fmax
-                    line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                    line_name, peaks, arias_intensity = plot_selected_code(selected_code, folder_simulation, iobs, j,
                                                       sites, label_code, col, fmin, fmax_msdwn, isource)
                     handles_tag.append(line_name)
-                    create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
+                    create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out1, selected_code, peaks, output_folder)
+                    if j == 2:
+                        create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out2, selected_code, arias_intensity, output_folder)
 
                 if 'esm' in code:
                     selected_code = 'esm'
@@ -775,10 +809,12 @@ def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_
                     folder_simulation = folder_esm
                     col = 'r'
                     fmax_esm = fmax
-                    line_name, peaks = plot_selected_code(selected_code, folder_simulation, iobs, j,
+                    line_name, peaks, arias_intensity = plot_selected_code(selected_code, folder_simulation, iobs, j,
                                                       sites, label_code, col, fmin, fmax_esm, isource)
                     handles_tag.append(line_name)
-                    create_file_peaks_for_each_seismogram(iobs, sites, ext_out, selected_code, peaks, output_folder)
+                    create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out1, selected_code, peaks, output_folder)
+                    if j == 2:
+                        create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out2, selected_code, arias_intensity, output_folder)
 
                 plt.subplot(321)
                 plt.xlim(0, time_max_plot)
@@ -814,38 +850,42 @@ def create_maps_for_each_code(sites, ext_out, selected_code, folder_plot, output
     import os
     import numpy as np
 
-    fmt = '%d', '%7.4f', '%7.4f', '%9.5f', '%9.5f', '%9.5f', '%9.5f'
+    fmt = '%d', '%7.4f', '%7.4f', '%9.5f', '%9.5f', '%9.5f'
 
-    peaks_code = np.zeros((len(sites['ID']), 7))
+    intensity_measure_code = np.zeros((len(sites['ID']), 6))
     for iobs in range(len(sites['Z'])):
-        file_single_peaks = output_folder + '/' + str(iobs) + '_peaks_' + ext_out + '_' + selected_code + '.npy'  
-        single_site = np.load(file_single_peaks)
-        peaks_code[iobs,:] = single_site 
+        file_single_intensity_measure = output_folder + '/' + str(iobs) + '_' + ext_out + '_' + selected_code + '.npy'  
+        single_site = np.load(file_single_intensity_measure)
+        intensity_measure_code[iobs,:] = single_site 
 
-    file_peaks = folder_plot + '/peaks_'+selected_code + "." + ext_out +'.txt'
-    np.savetxt(file_peaks, peaks_code, fmt=fmt)
+    file_intensity_measure = folder_plot + '/' + ext_out + '_' +selected_code + '.txt'
+    np.savetxt(file_intensity_measure, intensity_measure_code, fmt=fmt)
     plot_file_map = folder_plot + '/' + selected_code + "." + ext_out + ".png"
-    create_figure_3plots(peaks_code, fault, sites, label_map, j, plot_file_map)
-    command_rm_npy = 'rm ' + file_single_peaks
+    create_figure_3plots(intensity_measure_code, fault, sites, label_map, j, plot_file_map)
+    command_rm_npy = 'rm -f ' + file_single_intensity_measure
     os.system(command_rm_npy)
     
     return
 
 
 def create_maps(folder_plot, sites, code, output_folder, fault):
-    for j in range(3):
+    for j in range(4):
         if j == 0:
-            ext_out = 'd'
+            ext_out = 'pgd'
             unit_measure = 'cm'
             label_map = 'PGD (' + unit_measure + ')'
         if j == 1:
-            ext_out = 'v'
+            ext_out = 'pgv'
             unit_measure = 'cm/s'
             label_map = 'PGV (' + unit_measure + ')'
         if j == 2:
-            ext_out = 'a'
+            ext_out = 'pga'
             unit_measure = 'g'
             label_map = 'PGA (' + unit_measure + ')'
+        if j == 4:
+            ext_out = 'ai'
+            unit_measure = 'cm/s'
+            label_map = 'AI (' + unit_measure + ')'
 
         #site_number lon lat peak_NS peak_EW peak_Z
         if 'hisada' in code:
@@ -885,28 +925,31 @@ def create_maps(folder_plot, sites, code, output_folder, fault):
             create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
     return
 
-def post_processing(output_folder, plot_param, code, sites, fault, computational_param, path_data):
+def post_processing(output_folder, plot_param, code, sites, fault, computational_param, path_data, comm=None):
     import os
 
+    if comm is None:
+        rank=0
+        nranks=1
+        isParallel = False
+    else:
+        rank= comm.Get_rank()
+        nranks = comm.size
+        isParallel = True
+
     folder_plot = output_folder + '/PLOT'
-    isExist = os.path.exists(folder_plot)
-    if not isExist:
-        os.makedirs(folder_plot)
-
     folder_waveforms = folder_plot + '/WAVEFORMS'
-    isExist = os.path.exists(folder_waveforms)
-    print(folder_waveforms)
-    print(isExist)
-    if not isExist:
-        os.makedirs(folder_waveforms)
-
     folder_maps = folder_plot + '/MAPS'
-    isExist = os.path.exists(folder_maps)
-    if not isExist:
-        os.makedirs(folder_maps)
 
-    create_waveforms(folder_waveforms, plot_param, code, sites, fault, computational_param, path_data, output_folder)
-    create_maps(folder_maps, sites, code, output_folder, fault)
+    if rank == 0:
+        os.system("mkdir -p " + folder_plot)
+        os.system("mkdir -p " + folder_waveforms)
+        os.system("mkdir -p " + folder_maps)
+
+    if isParallel : comm.Barrier()
+    create_waveforms(folder_waveforms, plot_param, code, sites, fault, computational_param, path_data, output_folder, rank, nranks)
+    if isParallel : comm.Barrier()
+    if rank == 0 : create_maps(folder_maps, sites, code, output_folder, fault)
 
     return
 # https://sourcespec.readthedocs.io/en/latest/_modules/spectrum.html
