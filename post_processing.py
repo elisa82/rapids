@@ -679,7 +679,7 @@ def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_
                 num_realizations = computational_param['realizations']
             for isource in range(1, num_realizations+1):
                 handles_tag = []
-                plot_file = folder_plot + '/' + str(sites['ID'][iobs]) + "_" + code + "." + ext_out + '_' + \
+                plot_file = folder_plot + '/' + str(sites['ID'][iobs]) + "_" + code + "." + ext_out1 + '_' + \
                         str(isource).zfill(3) + ".png"
                 plt.figure(100 * j + iobs)
 
