@@ -1557,44 +1557,8 @@ def create_input_speed_file(folder, computational_param, meshfile):
     return
 
 
-def create_script_speed(folder, path_code_speed, sites, cineca):
+def create_script_speed(folder, path_code_speed, sites):
     import numpy as np
-
-    nproc = cineca['nnodes'] * cineca['ntask_per_node']
-
-    nobs = len(sites['Z'])
-    fid = open(folder + '/run_speed_cineca.slurm', 'w')
-    fid.write('{}\n'.format('#!/bin/bash'))
-    fid.write('{}{}\n'.format('#SBATCH --nodes=', cineca['nnodes']))
-    fid.write('{}\n'.format('#un nodo ha 48 processori'))
-    fid.write('{}{}\n'.format('#SBATCH --ntasks-per-node=',cineca['ntask_per_node']))
-    fid.write('{}\n'.format('##SBATCH --cpus-per-task=1'))
-    fid.write('{}\n'.format(''))
-    fid.write('{}{}{}\n'.format('#SBATCH --mem=', cineca['memory'], 'GB'))
-    fid.write('{}{}\n'.format('#SBATCH --time=', cineca['duration']))
-    # fid.write('{}\n'.format('#SBATCH --account=OGS23_PRACE_IT'))
-    fid.write('{}{}\n'.format('#SBATCH --account=',cineca['account']))
-    fid.write('{}\n'.format('#SBATCH --job-name=',cineca['job_name']))
-    fid.write('{}\n'.format(''))
-    # fid.write('{}\n'.format('#SBATCH --qos=g100_qos_dbg'))
-    fid.write('{}\n'.format(''))
-    fid.write('{}{}\n'.format('#SBATCH --partition=', cineca['partition']))
-    fid.write('{}\n'.format(''))
-    fid.write('{}\n'.format('mkdir -p MONITOR'))
-    fid.write('{}\n'.format('mkdir -p FILES_MPI'))
-    fid.write('{}\n'.format('rm MONITOR/*'))
-    fid.write('{}\n'.format('rm FILES_MPI/*'))
-    fid.write('{}\n'.format('rm MLST.input'))
-    fid.write('{}\n'.format('rm MLST.position'))
-    fid.write('{}\n'.format(''))
-    fid.write('{}\n'.format('module load profile/advanced'))
-    fid.write('{}\n'.format('module load openmpi/4.1.1--gcc--10.2.0-cuda--11.1.0'))
-    fid.write('{}\n'.format(''))
-    fid.write('{}\n'.format('export OMP_NUM_THREADS=1'))
-    fid.write('{}\n'.format('date'))
-    fid.write('{} {} {} {}\n'.format('mpirun -np ', nproc, path_code_speed, ' > speed.out'))
-    fid.write('{}\n'.format('date'))
-    fid.close()
 
     fid = open(folder + '/run_speed_local.sh', 'w')
     fid.write('{}\n'.format('#!/bin/bash'))

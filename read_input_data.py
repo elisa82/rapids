@@ -240,27 +240,6 @@ def create_fault():
     return fault
 
 
-def create_cineca_slurm():
-    nnodes = None
-    memory = None  
-    partition = None
-    duration = None
-    ntask_per_node = None
-    account = None
-    job_name = None
-
-    cineca = {
-        "nnodes": nnodes,
-        "memory": memory,
-        "partition": partition,
-        "duration": duration,
-        "ntask_per_node": ntask_per_node,
-        "account": account,
-        "job_name": job_name
-    }
-    return cineca
-
-
 def create_material_properties():
     vp = None
     vs = None
@@ -666,17 +645,4 @@ def read_input_data(fileini, code):
     except KeyError:
         computational_param['freq_join'] = None
 
-    cineca = create_cineca_slurm()
-
-    if 'speed' in code:
-        cineca['nnodes'] = int(input['nnodes'])
-        cineca['memory'] = int(input['memory'])
-        cineca['partition'] = input['partition']
-        cineca['duration'] = input['duration']
-        cineca['ntask_per_node'] = int(input['ntask_per_node'])
-        cineca['account'] = input['account']
-        cineca['job_name'] = input['job_name']
-   
-    cineca = create_cineca_slurm()
-
-    return layers, fault, computational_param, sites, plot_param, topo, output_folder, cineca
+    return layers, fault, computational_param, sites, plot_param, topo, output_folder
