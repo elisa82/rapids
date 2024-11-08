@@ -385,7 +385,7 @@ def define_missing_parameters(code, layers, fault, computational_param, path_dat
         print(minlon, maxlon, minlat, maxlat)
         
         command_nac = 'python3 rapids/profilo_medio.py --out ' + vel_model_file + ' --nac_path ' + NAC_PATH + ' --z -4 60 --lon ' + str(minlon)+ ' ' + str(maxlon) + ' --lat ' + str(minlat)+ ' ' + str(maxlat) 
-        command_nac = 'python3 rapids/profilo_medio.py --out ' + vel_model_file + ' --nac_path ' + NAC_PATH + ' --z -0 50 --lon ' + '12.0'+ ' ' + '14.0' + ' --lat ' + '45.5' + ' ' + '47.0' 
+#        command_nac = 'python3 rapids/profilo_medio.py --out ' + vel_model_file + ' --nac_path ' + NAC_PATH + ' --z -0 50 --lon ' + '12.0'+ ' ' + '14.0' + ' --lat ' + '45.5' + ' ' + '47.0' 
         os.system(command_nac)
 
         profile = np.loadtxt(vel_model_file, skiprows=3)
