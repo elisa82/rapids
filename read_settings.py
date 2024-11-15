@@ -48,4 +48,7 @@ def read_settings(file_settings, code):
         settings['path_code_ucsb_green_HF'] = input['path_code_ucsb_green_HF']
         settings['path_code_ucsb_green_LF'] = input['path_code_ucsb_green_LF']
 
+    if code == 'stitched-SU':
+        settings['path_data'] = input['path_data']
+
     return settings
