@@ -202,28 +202,35 @@ def create_single_map(intensity_measure_all, minlon, maxlon, minlat, maxlat, com
     lat = intensity_measure_all[:, 2]
     val = intensity_measure_all[:, 3 + comp]
 
+    # Create a regular grid over the map extent
+    lon_grid = np.linspace(minlon, maxlon, 500)  # Adjust the grid resolution as needed
+    lat_grid = np.linspace(minlat, maxlat, 500)
+    lon_grid, lat_grid = np.meshgrid(lon_grid, lat_grid)
+
     # create map
     map = Basemap(projection='merc', resolution='i', llcrnrlon=minlon, llcrnrlat=minlat,
                   urcrnrlon=maxlon, urcrnrlat=maxlat)
-    map.drawparallels(np.arange(-90, 91., 0.1), labels=[1, 0, 0, 1], dashes=[1, 1], linewidth=0.25, color='0.5')
-    map.drawmeridians(np.arange(-180., 181., 0.1), labels=[0, 1, 0, 1], dashes=[1, 1], linewidth=0.25, color='0.5')
+
+    map.drawparallels(np.arange(-90, 91., 0.5), labels=[1, 0, 0, 1], dashes=[1, 1], linewidth=0.25, color='0.5')
+    map.drawmeridians(np.arange(-180., 181., 0.5), labels=[0, 1, 0, 1], dashes=[1, 1], linewidth=0.25, color='0.5')
     map.drawmapboundary(fill_color='lightblue')
     map.fillcontinents(color='white', lake_color='lightblue')
     map.drawcoastlines()
+
     cmap = plt.cm.get_cmap('gist_rainbow_r')
+    norm = colors.BoundaryNorm(boundaries=bounds, ncolors=256, extend='both')
 
     x, y = map(np.asarray(lon), np.asarray(lat))
     # Bounds PGA e PGV da Oliveti Faenza Michelini, per PGD è PGV/2
-    norm = colors.BoundaryNorm(boundaries=bounds, ncolors=256, extend='both')
-    map.scatter(x, y, s=50, c=val, cmap=cmap, zorder=2, norm=norm)
+    map.scatter(x, y, s=7, c=val, cmap=cmap, zorder=2, norm=norm)
     x1, y1 = map(fault['vertex']['pbl']['lon'], fault['vertex']['pbl']['lat'])
     x2, y2 = map(fault['vertex']['ptl']['lon'], fault['vertex']['ptl']['lat'])
     x3, y3 = map(fault['vertex']['ptr']['lon'], fault['vertex']['ptr']['lat'])
     x4, y4 = map(fault['vertex']['pbr']['lon'], fault['vertex']['pbr']['lat'])
     hypo_lon, hypo_lat = map(fault['hypo']['lon'], fault['hypo']['lat'])
-    map.plot(hypo_lon, hypo_lat, marker='*', markersize=15, c='black')
-    poly = Polygon([(x1, y1), (x2, y2), (x3, y3), (x4, y4)], facecolor='lightyellow', edgecolor='black', linewidth=2)
+    poly = Polygon([(x1, y1), (x2, y2), (x3, y3), (x4, y4)], facecolor='lightyellow', edgecolor='black', linewidth=2, zorder=5, alpha=0.3)
     plt.gca().add_patch(poly)
+    map.plot(hypo_lon, hypo_lat, marker='*', markersize=10, c='black')
 
     ax = plt.gca()
     divider = make_axes_locatable(ax)
@@ -248,7 +255,7 @@ def create_figure_3plots(intensity_measure_all, fault, sites, label_map, desired
     import numpy as np
 
     plt.figure()
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(12, 5))
     #plt.rcParams['font.family'] = "Times New Roman"
     plt.rcParams['font.size'] = '10'
     plt.rcParams['mathtext.fontset'] = "stix"
@@ -278,10 +285,11 @@ def create_figure_3plots(intensity_measure_all, fault, sites, label_map, desired
         if k == 2:
             label_comp = 'Z'
 
-        plt.subplot(2, 2, k + 1)
+        plt.subplot(1, 3, k + 1)
         create_single_map(intensity_measure_all, minlon, maxlon, minlat, maxlat, k, bounds, fault, label_map)
         plt.title(label_comp)
     plt.tight_layout()
+    plt.subplots_adjust(wspace=0.6)
     plt.savefig(plot_file_map)
     plt.close()
 
@@ -363,6 +371,8 @@ def plot_selected_code(selected_code, folder_simulation, iobs, desired_output, s
     plt.subplot(326)
     plt.loglog(xf, fft, col, linewidth=0.4)
 
+    plt.subplots_adjust(hspace=0.4, wspace=0.3)
+
     return line_name, peaks
 
 
@@ -398,6 +408,7 @@ def compute_Repi(sites, fault):
     import numpy as np
     Repi = []
     for i in range(len(sites['Z'])):
+    #reduced for i in range(10):
         Repi.append(
             np.sqrt((sites['X'][i] - fault['hypo_utm']['X']) ** 2 + (sites['Y'][i] - fault['hypo_utm']['Y']) ** 2))
     return Repi
@@ -655,8 +666,8 @@ def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_
 
     Repi = compute_Repi(sites, fault)
 
-    #for iobs in range(1):
     Nsites = len(sites['Z'])
+    #reduced Nsites = 10
     Site_Indexes=np.arange(Nsites)
 
     for iobs in Site_Indexes[rank::nranks]:
@@ -835,7 +846,9 @@ def create_maps_for_each_code(sites, ext_out, selected_code, folder_plot, output
     fmt = '%d', '%7.4f', '%7.4f', '%9.5f', '%9.5f', '%9.5f'
 
     intensity_measure_code = np.zeros((len(sites['ID']), 6))
+    #reduced intensity_measure_code = np.zeros((10, 6))
     for iobs in range(len(sites['Z'])):
+    #reduced for iobs in range(10):
         file_single_intensity_measure = output_folder + '/' + str(iobs) + '_' + ext_out + '_' + selected_code + '.npy'  
         single_site = np.load(file_single_intensity_measure)
         intensity_measure_code[iobs,:] = single_site 

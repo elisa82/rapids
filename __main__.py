@@ -288,7 +288,6 @@ if __name__ == '__main__':
             comm = None
 
         settings = read_settings('settings.ini', code)
-        print('ciao ',path_data, code)
         post_processing(folder, plot_param, code, sites, fault, computational_param, path_data, comm)
 
 
