@@ -196,6 +196,7 @@ def create_Green(folder, computational_param, fault, sites, type_green):
     import numpy as np
     import math
 
+
     fid = open(folder + '/Green.in', 'w')
     if type_green == 'LF':
         file_model = 'model_lf.vel'
