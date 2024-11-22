@@ -5,9 +5,3 @@ RAPIDS - RAPID input for phisics-based ground shaking Simulations
 Author: Elisa Zuccolo, OrcID: https://orcid.org/0000-0002-8484-773X
 
 
-Contributors:
-- Giorgio Bolzon (OGS): parallelization of the post-processing
-
-
-How to cite this repository:
-
