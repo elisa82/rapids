@@ -1,6 +1,6 @@
 @software{elisa_zuccolo_2024_14201494,
   author       = {Elisa Zuccolo},
-  title        = {elisa82/rapids: First release},
+  title        = {RAPIDS: RAPID input for physics-based ground shaking simulations},
   month        = nov,
   year         = 2024,
   publisher    = {Zenodo},
