@@ -1,0 +1,10 @@
+@software{elisa_zuccolo_2024_14201494,
+  author       = {Elisa Zuccolo},
+  title        = {RAPIDS: RAPID input for physics-based ground shaking simulations},
+  month        = nov,
+  year         = 2024,
+  publisher    = {Zenodo},
+  version      = {v1.0},
+  doi          = {10.5281/zenodo.14201458},
+  url          = {https://doi.org/10.5281/zenodo.14201458}
+}

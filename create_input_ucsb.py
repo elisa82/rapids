@@ -40,7 +40,7 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
             os.system('cp ../model.vel model_lf.vel')
             if green == 'green':
                 create_Green(folder_LF, computational_param, fault, sites, 'LF')
-                command = 'mpirun ' + path_code_ucsb_green_LF + '/gfbank_mpi'
+                command = 'mpirun -np 20 ' + path_code_ucsb_green_LF + '/gfbank_mpi'
                 os.system(command)
                 os.system('mv model.green_LF.inf Green_Bank.inf')
             if green == 'nogreen':
@@ -57,7 +57,7 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
             if green == 'green':
                 create_Green(folder_HF, computational_param, fault, sites, 'HF')
                 create_model_HF(folder_HF, layers)
-                command = 'mpirun ' + path_code_ucsb_green_HF + '/gfbank_mpi'
+                command = 'mpirun -np 20 ' + path_code_ucsb_green_HF + '/gfbank_mpi'
                 os.system(command)
                 os.system('mv model.green_HF.inf Green_Bank.inf')
             if green == 'nogreen':
@@ -81,7 +81,7 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
                 os.system('cp ../Source.bst .')
             else:
                 os.system('cp ../Source.001 .')
-            command = 'mpirun ' + path_code + '/syn_1d'
+            command = 'mpirun -np '+ str(len(sites['Z'])) + path_code + '/syn_1d'
             os.system(command)
 
         if 'HF' in band_freq:
@@ -94,6 +94,6 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
                 os.system('cp ../Source.bst .')
             else:
                 os.system('cp ../Source.001 .')
-            command = 'mpirun ' + path_code + '/syn_1d'
+            command = 'mpirun -np '+ str(len(sites['Z'])) + path_code + '/syn_1d'
             os.system(command)
     return
