@@ -21,6 +21,7 @@ from rapids.read_input_data import read_folder
 #freq_band_gf = [HF/LF/LFHF/HFLF]
 #mesh = [yes/no]
 #gf = [yes/no]
+#np number of processors for ucsb computations
 
 def load_inputs(fileini):
     import numpy as np
@@ -228,7 +229,7 @@ if __name__ == '__main__':
                     path_code_ucsb_green_LF = settings['path_code_ucsb_green_LF']
                     create_input_ucsb_run(folder, layers, fault, computational_param, sites,
                                       path_code_ucsb, path_code_ucsb_green_HF, path_code_ucsb_green_LF, '--source', 'nogreen', 
-                                      [], path_data) 
+                                      [], path_data)
             settings = read_settings('settings.ini', 'speed')
             path_cubit = settings['path_cubit']
             create_input_speed_run(folder, layers, fault, computational_param, sites, settings['path_code_speed'],
