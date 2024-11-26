@@ -8,8 +8,6 @@ history*
 /DATA/VelModel/GeoInquire/
 /DATA/VelModel/gndt.por
 /gmt.history
-create_input_hisada.py
-create_input_hisada_files.py
 plot_last.py
 plot_new.py
 plot_orig.py
