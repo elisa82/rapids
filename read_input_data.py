@@ -124,8 +124,8 @@ def create_computational_param():
     mesh = None
     gf = None
     freq_band_gf = None
-    nproc_gf = 1
-    nproc_seis = 1
+    nproc_gf = None
+    nproc_seis = None
     computational_param = {
         "dt_ucsb": dt_ucsb,
         "dt_speed": dt_speed,
@@ -503,8 +503,12 @@ def read_input_data(fileini, code):
         computational_param['freq_band_gf'] = input['freq_band_gf']
         try:
             computational_param['nproc_seis'] = input['nproc_seis']
+        except KeyError:
+            nproc_seis = 1
         try:
             computational_param['nproc_gf'] = input['nproc_gf']
+            nproc_gf = 1
+        except KeyError:
 
     if 'speed' in code:
         computational_param['mesh'] = input['mesh']
