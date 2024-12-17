@@ -504,11 +504,11 @@ def read_input_data(fileini, code):
         try:
             computational_param['nproc_seis'] = input['nproc_seis']
         except KeyError:
-            nproc_seis = 1
+            computational_param['nproc_seis'] = 1
         try:
             computational_param['nproc_gf'] = input['nproc_gf']
-            nproc_gf = 1
         except KeyError:
+            computational_param['nproc_gf'] = 1
 
     if 'speed' in code:
         computational_param['mesh'] = input['mesh']
