@@ -16,11 +16,10 @@ def compute_maximum_distance(mag):
     import numpy as np
 
     #to define threshold and dist according to fragility functions of target structures
-    if mag < 5.5:
+    if mag < 6.0:
         threshold = 0.01
     else:
         threshold = 0.05
-
     dist = 0
     while dist < 200:
         mean, stdv = bragato_slejko_2005.BragatoSlejko2005().ground_motion('PGA', mag, dist)

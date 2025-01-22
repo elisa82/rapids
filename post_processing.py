@@ -187,13 +187,32 @@ def read_esm(filename_in):
 
     return time, np.asarray(acc_data)
 
-def create_single_map(intensity_measure_all, minlon, maxlon, minlat, maxlat, comp, bounds, fault, label):
+def create_single_map(intensity_measure_all, minlon, maxlon, minlat, maxlat, comp, bounds, fault, label, desired_output, file_topo_plot):
     import matplotlib.pylab as plt
     import numpy as np
     from mpl_toolkits.basemap import Basemap
     from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
     from matplotlib.patches import Polygon
-    import matplotlib.colors as colors
+    from matplotlib.colors import BoundaryNorm, ListedColormap, Normalize
+    from scipy.interpolate import griddata
+    import rasterio
+
+    with rasterio.open(file_topo_plot) as src:
+        data = src.read(1)  # Legge il primo (e spesso unico) canale/raster
+        # Estrai i limiti del raster (latitudine e longitudine)
+        lon_min_t, lat_min_t, lon_max_t, lat_max_t = src.bounds
+        crs = src.crs  # Sistema di riferimento spaziale
+        data = data[::-1]  # Inverte i dati (se necessario)
+
+    # Trova il range di valori nell'intero raster (minimo e massimo)
+    min_value_t = -2000
+    max_value_t = data.max()
+
+    plt.figure()
+    #plt.rcParams['font.family'] = "Times New Roman"
+    plt.rcParams['font.size'] = '10'
+    plt.rcParams['mathtext.fontset'] = "stix"
+    plt.rcParams['legend.title_fontsize'] = '16'
 
     aspect = 20
     pad_fraction = 0.5
@@ -201,28 +220,60 @@ def create_single_map(intensity_measure_all, minlon, maxlon, minlat, maxlat, com
     lon = intensity_measure_all[:, 1]
     lat = intensity_measure_all[:, 2]
     val = intensity_measure_all[:, 3 + comp]
-
-    # Create a regular grid over the map extent
-    lon_grid = np.linspace(minlon, maxlon, 500)  # Adjust the grid resolution as needed
-    lat_grid = np.linspace(minlat, maxlat, 500)
-    lon_grid, lat_grid = np.meshgrid(lon_grid, lat_grid)
+    val = np.nan_to_num(val, nan=0)
+    if desired_output == 2:
+        val = val*100.
 
     # create map
     map = Basemap(projection='merc', resolution='i', llcrnrlon=minlon, llcrnrlat=minlat,
                   urcrnrlon=maxlon, urcrnrlat=maxlat)
 
+    # Calcola i limiti dell'area visibile di Basemap
+    map_llcrnrlat, map_llcrnrlon = map.llcrnrlat, map.llcrnrlon
+    map_urcrnrlat, map_urcrnrlon = map.urcrnrlat, map.urcrnrlon
+
+    # Estrai i lati in pixel delle coordinate del raster
+    lon_t = np.linspace(lon_min_t, lon_max_t, data.shape[1])
+    lat_t = np.linspace(lat_min_t, lat_max_t, data.shape[0])
+
+    # Trova l'indice di inizio e fine per latitudine e longitudine
+    lat_start = np.argmax(lat_t >= map_llcrnrlat)
+    lat_end = np.argmax(lat_t >= map_urcrnrlat)
+    lon_start = np.argmax(lon_t >= map_llcrnrlon)
+    lon_end = np.argmax(lon_t >= map_urcrnrlon)
+
+    # Ritaglia il raster in base agli indici
+    data_cropped = data[lat_start:lat_end, lon_start:lon_end]
+    norm_t = Normalize(vmin=min_value_t, vmax=max_value_t)
+    map.imshow(data_cropped, origin='lower', cmap='terrain', extent=(lon_t[lon_start], lon_t[lon_end], lat_t[lat_start], lat_t[lat_end]), norm=norm_t, alpha=0.5)
+
     map.drawparallels(np.arange(-90, 91., 0.5), labels=[1, 0, 0, 1], dashes=[1, 1], linewidth=0.25, color='0.5')
     map.drawmeridians(np.arange(-180., 181., 0.5), labels=[0, 1, 0, 1], dashes=[1, 1], linewidth=0.25, color='0.5')
-    map.drawmapboundary(fill_color='lightblue')
-    map.fillcontinents(color='white', lake_color='lightblue')
     map.drawcoastlines()
+    map.drawcountries()
 
-    cmap = plt.cm.get_cmap('gist_rainbow_r')
-    norm = colors.BoundaryNorm(boundaries=bounds, ncolors=256, extend='both')
+    colors = [
+        "#FFFFFF",  # Bianco (valori bassissimi o vuoti)
+        "#00BFFF",  # Blu chiaro (0.1)
+        "#40E0D0",  # Turchese (0.2)
+        "#7FFF00",  # Verde chiaro (0.5)
+        "#ADFF2F",  # Verde giallastro (1)
+        "#FFFF00",  # Giallo (2)
+        "#FFD700",  # Oro (5)
+        "#FFA500",  # Arancione (10)
+        "#FF4500",  # Rosso aranciato (20)
+        "#FF0000",  # Rosso (50)
+        "#B22222",  # Rosso scuro (100)
+        "#800000"   # Marrone rossastro (200)
+        ]
 
+    cmap = ListedColormap(colors)
+    norm = BoundaryNorm(boundaries=bounds, ncolors=len(colors))
     x, y = map(np.asarray(lon), np.asarray(lat))
-    # Bounds PGA e PGV da Oliveti Faenza Michelini, per PGD è PGV/2
-    map.scatter(x, y, s=7, c=val, cmap=cmap, zorder=2, norm=norm)
+    # Bounds PGA e PGV based on Oliveti Faenza Michelini, per PGD ? PGV/2
+    #questo fa sistemato. Ora ho usato Faenza e Michelini (2010, 2011) come per le shakemaps
+    map.scatter(x, y, s=7, c=val, cmap=cmap, zorder=2, norm=norm, alpha=0.8)
+
     x1, y1 = map(fault['vertex']['pbl']['lon'], fault['vertex']['pbl']['lat'])
     x2, y2 = map(fault['vertex']['ptl']['lon'], fault['vertex']['ptl']['lat'])
     x3, y3 = map(fault['vertex']['ptr']['lon'], fault['vertex']['ptr']['lat'])
@@ -233,11 +284,26 @@ def create_single_map(intensity_measure_all, minlon, maxlon, minlat, maxlat, com
     map.plot(hypo_lon, hypo_lat, marker='*', markersize=10, c='black')
 
     ax = plt.gca()
+    # Create a regular grid over the map extent
+    lon_unique = np.linspace(lon.min(), lon.max(), num=500)
+    lat_unique = np.linspace(lat.min(), lat.max(), num=500)
+    grid_lon, grid_lat = np.meshgrid(lon_unique, lat_unique)
+    grid_val = griddata(
+        (lon, lat),   # Punti originali
+        val,          # Valori da interpolare
+        (grid_lon, grid_lat),  # Griglia di destinazione
+        method='linear'  # Metodo di interpolazione: 'linear', 'nearest', 'cubic'
+    )
+    x_grid, y_grid = map(grid_lon, grid_lat)
+    specific_value = 0.1*100 #voglio la linea di contorno a 0.1 g
+    contour = ax.contour(x_grid, y_grid, grid_val, levels=[specific_value], colors='red', linewidths=1, zorder=4)
+    ax.clabel(contour, inline=True, fontsize=8, fmt='%1.1f')
     divider = make_axes_locatable(ax)
     width = axes_size.AxesY(ax, aspect=1. / aspect)
     pad = axes_size.Fraction(pad_fraction, width)
     cax = divider.append_axes("right", size=width, pad=pad)
-    cb = plt.colorbar(cax=cax, cmap=cmap, spacing='uniform', orientation='vertical', extend='both')
+    ticks = bounds
+    cb = plt.colorbar(cax=cax, cmap=cmap, boundaries=bounds, ticks=ticks, spacing='uniform', orientation='vertical')
     cb.set_label(label=label, size=16)
 
     # cb_ymin = min(val)  # minimum value to show on colobar
@@ -246,33 +312,36 @@ def create_single_map(intensity_measure_all, minlon, maxlon, minlat, maxlat, com
     # cb.ax.set_ylim(cb_ymin, cb_ymax)
     # cb.outline.set_visible(False)  # hide the surrounding spines, which are too large after set_ylim
     # cb.ax.add_patch(plt.Rectangle((cb_xmin, cb_ymin), cb_xmax - cb_xmin, cb_ymax - cb_ymin,
-    #                                fc='none', ec='black', clip_on=False))
+    #             
     return
 
 
-def create_figure_3plots(intensity_measure_all, fault, sites, label_map, desired_output, plot_file_map):
+def create_figure_3plots(intensity_measure_all, fault, sites, label_map, desired_output, folder_plot, selected_code, file_topo_plot, ext_out):
     import matplotlib.pylab as plt
     import numpy as np
 
-    plt.figure()
-    plt.figure(figsize=(12, 5))
-    #plt.rcParams['font.family'] = "Times New Roman"
-    plt.rcParams['font.size'] = '10'
-    plt.rcParams['mathtext.fontset'] = "stix"
-    plt.rcParams['legend.title_fontsize'] = '16'
 
-    minlon, maxlon, minlat, maxlat = define_area_plot(fault, sites)
+    #minlon, maxlon, minlat, maxlat = define_area_plot(fault, sites)
+    minlon = 11.5
+    maxlon = 14.25
+    minlat = 45.5
+    maxlat =  47.5
+    bounds = np.array([0, 0.1, 0.2, 0.5, 1., 2., 5., 10., 20, 50, 100, 200])
 
-    if desired_output == 0:
-        vmax = 50
-        bounds = [8.900e-03, 4.695e-02, 3.430e-01, 1.040e+00, 2.530e+00, 5.450e+00, 1.080e+01, 2.015e+01, 3.585e+01,
-                  61.5]
     if desired_output == 1:
-        vmax = 100
-        bounds = np.array([0.0178, 0.0939, 0.686, 2.08, 5.06, 10.9, 21.6, 40.3, 71.7, 123])
+        #velocity
+        #bounds = np.array([0.0178, 0.0939, 0.686, 2.08, 5.06, 10.9, 21.6, 40.3, 71.7, 123])
+        bounds = bounds
     if desired_output == 2:
-        vmax = 1.
-        bounds = np.array([0.000555, 0.00232, 0.0121, 0.0338, 0.0746, 0.145, 0.261, 0.444, 0.723, 1.138])
+        #acceleration
+        #bounds = np.array([0.000555, 0.00232, 0.0121, 0.0338, 0.0746, 0.145, 0.261, 0.444, 0.723, 1.138])
+        #bounds = np.array([0, 0.06, 0.21, 0.81, 1.97, 4.82, 11.8, 28.7, 70.1, 171])
+        bounds = bounds 
+    if desired_output == 0:
+        #displacement
+        #bounds = [8.900e-03, 4.695e-02, 3.430e-01, 1.040e+00, 2.530e+00, 5.450e+00, 1.080e+01, 2.015e+01, 3.585e+01,
+        #          61.5]
+        bounds = bounds/2.
     if desired_output == 3:
         vmax = 1.
         bounds = np.array([0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 3.5])
@@ -285,12 +354,10 @@ def create_figure_3plots(intensity_measure_all, fault, sites, label_map, desired
         if k == 2:
             label_comp = 'Z'
 
-        plt.subplot(1, 3, k + 1)
-        create_single_map(intensity_measure_all, minlon, maxlon, minlat, maxlat, k, bounds, fault, label_map)
+        plot_file_map = folder_plot + '/' + selected_code + "." + ext_out + '_' + label_comp + ".png"
+        create_single_map(intensity_measure_all, minlon, maxlon, minlat, maxlat, k, bounds, fault, label_map, desired_output, file_topo_plot)
         plt.title(label_comp)
-    plt.tight_layout()
-    plt.subplots_adjust(wspace=0.6)
-    plt.savefig(plot_file_map)
+        plt.savefig(plot_file_map)
     plt.close()
 
     return
@@ -839,7 +906,7 @@ def create_waveforms(folder_plot, plot_param, code, sites, fault, computational_
                 plt.close('')
     return
 
-def create_maps_for_each_code(sites, ext_out, selected_code, folder_plot, output_folder, fault, label_map, j):
+def create_maps_for_each_code(sites, ext_out, selected_code, folder_plot, output_folder, fault, label_map, j, file_topo_plot):
     import os
     import numpy as np
 
@@ -855,15 +922,14 @@ def create_maps_for_each_code(sites, ext_out, selected_code, folder_plot, output
 
     file_intensity_measure = folder_plot + '/' + ext_out + '_' +selected_code + '.txt'
     np.savetxt(file_intensity_measure, intensity_measure_code, fmt=fmt)
-    plot_file_map = folder_plot + '/' + selected_code + "." + ext_out + ".png"
-    create_figure_3plots(intensity_measure_code, fault, sites, label_map, j, plot_file_map)
-    command_rm_npy = 'rm -f ' + file_single_intensity_measure
-    os.system(command_rm_npy)
+    create_figure_3plots(intensity_measure_code, fault, sites, label_map, j, folder_plot, selected_code, file_topo_plot, ext_out)
+    command_rm_npy = 'rm -f *.npy'
+    #os.system(command_rm_npy)
     
     return
 
 
-def create_maps(folder_plot, sites, code, output_folder, fault):
+def create_maps(folder_plot, sites, code, output_folder, fault, file_topo_plot):
     for j in range(3):
         if j == 0:
             ext_out = 'pgd'
@@ -875,7 +941,7 @@ def create_maps(folder_plot, sites, code, output_folder, fault):
             label_map = 'PGV (' + unit_measure + ')'
         if j == 2:
             ext_out = 'pga'
-            unit_measure = 'g'
+            unit_measure = '%g'
             label_map = 'PGA (' + unit_measure + ')'
         #if j == 4:
             #ext_out = 'ai'
@@ -885,39 +951,39 @@ def create_maps(folder_plot, sites, code, output_folder, fault):
         #site_number lon lat peak_NS peak_EW peak_Z
         if 'hisada' in code:
             selected_code = 'hisada'
-            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
+            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j, file_topo_plot)
 
         if 'speed' in code:
             selected_code = 'speed'
-            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
+            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j, file_topo_plot)
 
         if 'ucsb' in code:
             selected_code = 'ucsb'
-            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
+            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j, file_topo_plot)
 
         if 'stitched-U' in code:
             selected_code = 'stitched-U'
-            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
+            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j, file_topo_plot)
 
         if 'stitched-SU' in code:
             selected_code = 'stitched-SU'
-            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
+            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j, file_topo_plot)
 
         if 'hybridmd' in code:
             selected_code = 'msdwn'
-            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
+            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j, file_topo_plot)
 
         if 'ms' in code:
             selected_code = 'ms'
-            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
+            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j, file_topo_plot)
 
         if 'dwn' in code:
             selected_code = 'dwn'
-            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
+            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j, file_topo_plot)
 
         if 'esm' in code:
             selected_code = 'esm'
-            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j)
+            create_maps_for_each_code(sites,ext_out,selected_code,folder_plot, output_folder, fault, label_map, j, file_topo_plot)
     return
 
 def post_processing(output_folder, plot_param, code, sites, fault, computational_param, path_data, comm=None):
@@ -944,7 +1010,9 @@ def post_processing(output_folder, plot_param, code, sites, fault, computational
     if isParallel : comm.Barrier()
     create_waveforms(folder_waveforms, plot_param, code, sites, fault, computational_param, path_data, output_folder, rank, nranks)
     if isParallel : comm.Barrier()
-    if rank == 0 : create_maps(folder_maps, sites, code, output_folder, fault)
+    if rank == 0 : 
+        file_topo_plot = path_data + '/topo/exportImage.tiff'
+        create_maps(folder_maps, sites, code, output_folder, fault, file_topo_plot)
 
     return
 # https://sourcespec.readthedocs.io/en/latest/_modules/spectrum.html
