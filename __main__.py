@@ -14,6 +14,7 @@ from rapids.stitch_seismograms import stitch
 from rapids.conversions import speed2sac, speed2ascii
 import json
 from rapids.read_input_data import read_folder
+from rapids.compute_magnitudes_nsites_matrix import compute_magnitudes_nsites_matrix
 
 #Di default SPEED è in spostamento e MS-DWS in accelerazione!!!
 #Tutto il resto in velocità!!!!
@@ -88,6 +89,14 @@ if __name__ == '__main__':
         sys.exit('usage:\n'
             'python3 -m rapids #input_file [code] [mode]')
 
+    if fileini == 'none' and code == 'none' and calculation_mode == 'table':
+        start = 4.0
+        stop = 10.0
+        step = 0.1
+        compute_magnitudes_nsites_matrix(start,stop,step)
+        sys.exit("Created the table magnitudes-nsites for UrgentShake")
+
+        
     #read settings
     settings = read_settings('settings.ini', code)
     path_data = settings['path_data']

@@ -15,6 +15,8 @@ from rapids.read_input_data import read_folder
 from rapids.conversions import convert_mesh
 from rapids.read_settings import read_settings
 from rapids.post_processing import post_processing
+from rapids.read_input_data import compute_maximum_distance
+from rapids.compute_magnitudes_nsites_matrix import compute_magnitudes_nsites_matrix
 
 __all__ = [
 

@@ -26,7 +26,6 @@ def compute_maximum_distance(mag):
         if np.exp(mean-stdv) < threshold:
             break
         dist += 1
-    print(dist)
     return dist
 
 
