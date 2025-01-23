@@ -252,21 +252,34 @@ def create_single_map(intensity_measure_all, minlon, maxlon, minlat, maxlat, com
     map.drawcoastlines()
     map.drawcountries()
 
-    colors = [
-        "#FFFFFF",  # Bianco (valori bassissimi o vuoti)
-        "#00BFFF",  # Blu chiaro (0.1)
-        "#40E0D0",  # Turchese (0.2)
-        "#7FFF00",  # Verde chiaro (0.5)
-        "#ADFF2F",  # Verde giallastro (1)
-        "#FFFF00",  # Giallo (2)
-        "#FFD700",  # Oro (5)
-        "#FFA500",  # Arancione (10)
-        "#FF4500",  # Rosso aranciato (20)
-        "#FF0000",  # Rosso (50)
-        "#B22222",  # Rosso scuro (100)
-        "#800000"   # Marrone rossastro (200)
-        ]
-
+  #  colors = [
+  #      "#FFFFFF",  # Bianco (valori bassissimi o vuoti)
+  #      "#00BFFF",  # Blu chiaro (0.1)
+  #      "#40E0D0",  # Turchese (0.2)
+  #      "#7FFF00",  # Verde chiaro (0.5)
+  #      "#ADFF2F",  # Verde giallastro (1)
+  #      "#FFFF00",  # Giallo (2)
+  #      "#FFD700",  # Oro (5)
+  #      "#FFA500",  # Arancione (10)
+  #      "#FF4500",  # Rosso aranciato (20)
+  #      "#FF0000",  # Rosso (50)
+  #      "#B22222",  # Rosso scuro (100)
+  #      "#800000"   # Marrone rossastro (200)
+  #      ]
+    colors = np.array([
+        [255, 255, 255],  
+        [160, 230, 255],  
+        [128, 255, 255], 
+        [122, 255, 147], 
+        [127, 255, 0],
+        [255, 255, 0], 
+        [255, 200, 0], 
+        [255, 145, 0], 
+        [255, 72, 0],
+        [255, 0, 0], 
+        [200, 0, 0], 
+        [128, 0, 0]
+        ])/255
     cmap = ListedColormap(colors)
     norm = BoundaryNorm(boundaries=bounds, ncolors=len(colors))
     x, y = map(np.asarray(lon), np.asarray(lat))
@@ -346,13 +359,15 @@ def create_figure_3plots(intensity_measure_all, fault, sites, label_map, desired
         vmax = 1.
         bounds = np.array([0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 3.5])
 
-    for k in range(3):
+    for k in range(4):
         if k == 0:
             label_comp = 'NS'
         if k == 1:
             label_comp = 'EW'
         if k == 2:
             label_comp = 'Z'
+        if k == 3:
+            label_comp = 'H'
 
         plot_file_map = folder_plot + '/' + selected_code + "." + ext_out + '_' + label_comp + ".png"
         create_single_map(intensity_measure_all, minlon, maxlon, minlat, maxlat, k, bounds, fault, label_map, desired_output, file_topo_plot)
@@ -702,11 +717,12 @@ def prepare_signal(sig, dt, fmin, fmax):
 
 def create_file_intensity_measure_for_each_seismogram(iobs, sites, ext_out, selected_code, intensity_measure, output_folder):
     import numpy as np
-    single_peaks = np.zeros((6))
+    single_peaks = np.zeros((7))
     single_peaks[0] = iobs+1
     single_peaks[1] = sites['lon'][iobs]
     single_peaks[2] = sites['lat'][iobs]
     single_peaks[3: 6] = intensity_measure
+    single_peaks[6] = max(single_peaks[3],single_peaks[4]) #Ã¨ la max tra le due componenti orizzontali
     file_single_peaks = output_folder + '/' + str(iobs) + '_' + ext_out + '_' + selected_code + '.npy'
     np.save(file_single_peaks, single_peaks)
     return
@@ -910,9 +926,9 @@ def create_maps_for_each_code(sites, ext_out, selected_code, folder_plot, output
     import os
     import numpy as np
 
-    fmt = '%d', '%7.4f', '%7.4f', '%9.5f', '%9.5f', '%9.5f'
+    fmt = '%d', '%7.4f', '%7.4f', '%9.5f', '%9.5f', '%9.5f', '%9.5f'
 
-    intensity_measure_code = np.zeros((len(sites['ID']), 6))
+    intensity_measure_code = np.zeros((len(sites['ID']), 7))
     #reduced intensity_measure_code = np.zeros((10, 6))
     for iobs in range(len(sites['Z'])):
     #reduced for iobs in range(10):
@@ -924,7 +940,7 @@ def create_maps_for_each_code(sites, ext_out, selected_code, folder_plot, output
     np.savetxt(file_intensity_measure, intensity_measure_code, fmt=fmt)
     create_figure_3plots(intensity_measure_code, fault, sites, label_map, j, folder_plot, selected_code, file_topo_plot, ext_out)
     command_rm_npy = 'rm -f *.npy'
-    #os.system(command_rm_npy)
+    os.system(command_rm_npy)
     
     return
 
