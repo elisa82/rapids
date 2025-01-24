@@ -163,7 +163,6 @@ if __name__ == '__main__':
     layers, fault, computational_param, sites, plot_param, folder = load_inputs(fileini)
 
     if 'ucsb' in code:
-        print(computational_param['gf'])
         path_code_ucsb_green_HF = settings['path_code_ucsb_green_HF']
         path_code_ucsb_green_LF = settings['path_code_ucsb_green_LF']
         if fault['IDx'] == 'Yoffe-DCF':
@@ -172,8 +171,8 @@ if __name__ == '__main__':
             path_code_ucsb = settings['path_code_ucsb']
         if computational_param['gf'] == 'yes':
             green = 'green'
-        if computational_param['gf'] == 'no':
-            green = 'nogreen'
+        else:
+            green = computational_param['gf']
         freq_band = computational_param['freq_band_gf']
 
     if code == 'hisada':
@@ -237,7 +236,7 @@ if __name__ == '__main__':
                     path_code_ucsb_green_HF = settings['path_code_ucsb_green_HF']
                     path_code_ucsb_green_LF = settings['path_code_ucsb_green_LF']
                     create_input_ucsb_run(folder, layers, fault, computational_param, sites,
-                                      path_code_ucsb, path_code_ucsb_green_HF, path_code_ucsb_green_LF, '--source', 'nogreen', 
+                                      path_code_ucsb, path_code_ucsb_green_HF, path_code_ucsb_green_LF, '--source', '', 
                                       [], path_data)
             settings = read_settings('settings.ini', 'speed')
             path_cubit = settings['path_cubit']

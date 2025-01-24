@@ -27,11 +27,8 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
 
 
     if calculation_mode == '--gf' or calculation_mode == '--run':
-        if green == 'nogreen':
-            if fault['Mw'] == 4.2:
-                GF_precomputed_label = 'M4.2_2024_03_27'
-            if fault['Mw'] == 6.4:
-                GF_precomputed_label = 'M6.4_1976_05_06'
+        if green != 'green':
+            GF_precomputed_label = computational_param['gf']
         if 'LF' in band_freq:
             folder_LF = folder + '/HF' #L'ho chiamato HF ma sarebbe il run con la LF
             if not os.path.exists(folder_LF):
@@ -43,7 +40,7 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
                 command = 'mpirun -np ' + str(computational_param['nproc_gf']) + ' '  + path_code_ucsb_green_LF + '/gfbank_mpi'
                 os.system(command)
                 os.system('mv model.green_LF.inf Green_Bank.inf')
-            if green == 'nogreen':
+            else:
                 command_cp_GF = 'cp '+path_data+'/GF/model.green_LF_'+GF_precomputed_label+' model.green_LF'
                 command_cp_GF_info = 'cp '+path_data+'/GF/Green_Bank_LF.inf_'+GF_precomputed_label+' Green_Bank.inf'
                 os.system(command_cp_GF)
@@ -60,7 +57,7 @@ def create_input_ucsb_run(folder, layers, fault, computational_param, sites, pat
                 command = 'mpirun -np ' + str(computational_param['nproc_gf']) + ' '  + path_code_ucsb_green_HF + '/gfbank_mpi'
                 os.system(command)
                 os.system('mv model.green_HF.inf Green_Bank.inf')
-            if green == 'nogreen':
+            else:
                 command_cp_GF = 'cp DATA/GF/model.green_HF_',GF_precomputed_label,' model.green_HF'
                 command_cp_GF_info = 'cp DATA/GF/Green_Bank_HF.inf_',GF_precomputed_label,' Green_Bank.inf'
                 os.system(command_cp_GF)
