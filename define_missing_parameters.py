@@ -1,3 +1,6 @@
+def are_values_similar(val1, val2, tolerance):
+    return abs(val1 - val2) <= tolerance
+
 def define_area_NAC1D(fault, sites, computational_param):
     buffer = 0.01 
     for i in range(2):
@@ -397,7 +400,16 @@ def define_missing_parameters(code, layers, fault, computational_param, path_dat
         vs_grouped = []
         rho_grouped = []
         thk_grouped = []
+
+        thk = np.diff(z)  # diff calcola la differenza tra elementi consecutivi
+        # Aggiungi uno 0 alla fine di thk (l'ultimo strato non ha un successivo)
+        thk = np.append(thk, 0)
+
+
+        tolerance = 0.1 # Parametro di tolleranza per il confronto tra i valori
         next_line = 0
+
+        # Raggruppamento degli strati con valori simili
         for i in range(len(rho)):
             if not np.isnan(vp[i]):
                 layers['depth_top_layer'] = z[i]
@@ -405,18 +417,44 @@ def define_missing_parameters(code, layers, fault, computational_param, path_dat
         for i in range(len(rho)):
             if not np.isnan(vp[i]):
                 if i == next_line:
-                    vp_grouped.append(vp[i])
-                    vs_grouped.append(vs[i])
-                    rho_grouped.append(rho[i])
-                    thk = 0
+                    # Inizializza variabili per il calcolo della media pesata
+                    vp_accum = 0
+                    vs_accum = 0
+                    rho_accum = 0
+                    thk_accum = 0
+                    total_thk = 0  # Somma totale degli spessori per la normalizzazione
+
+                    # Elenco di indici degli strati simili
+                    similar_layers = []
                     for ii in range(i, len(rho)):
-                        if vp[ii] == vp[i] and vs[ii] == vs[i] and rho[ii] == rho[i]:
-                            if ii < len(rho) - 1:
-                                thk += z[ii + 1] - z[ii]
-                            else:
-                                thk += 0
+                        # Confronta i valori con la tolleranza definita
+                        if (are_values_similar(vp[ii], vp[i], tolerance) and
+                            are_values_similar(vs[ii], vs[i], tolerance) and
+                            are_values_similar(rho[ii], rho[i], tolerance) and
+                            (z[ii] >= 0 and z[i] >=0) or (z[ii] < 0 and z[i] <0) ):
+                            similar_layers.append(ii)
+                            thk_accum += thk[ii]  # Spessore accumulato
+                            vp_accum += vp[ii] * thk[ii]  # Valore pesato
+                            vs_accum += vs[ii] * thk[ii]  # Valore pesato
+                            rho_accum += rho[ii] * thk[ii]  # Valore pesato
+                            total_thk += thk[ii]
                             istop = ii
-                    thk_grouped.append(thk)
+                        else:
+                            break
+
+                    # Calcola le medie pesate
+                    if total_thk > 0:
+                        vp_weighted_avg = vp_accum / total_thk
+                        vs_weighted_avg = vs_accum / total_thk
+                        rho_weighted_avg = rho_accum / total_thk
+
+                        # Aggiunge i valori medi pesati ai gruppi
+                        vp_grouped.append(vp_weighted_avg)
+                        vs_grouped.append(vs_weighted_avg)
+                        rho_grouped.append(rho_weighted_avg)
+                        thk_grouped.append(thk_accum)
+
+                    # Aggiorna la prossima linea da processare
                     next_line = istop + 1
             else:
                 next_line = i + 1
