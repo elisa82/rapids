@@ -299,7 +299,17 @@ def create_plot_param():
 ### optionally, a list of values can be split and also converted
 ### optionally, if the parameter is missing, another set of parameters can be loaded, through the reference to a further function (the last parameter)
 ### V. Sciortino
-def read_key_from_input_file(dest_dict, key_name, input_dict, isListOfVals, conversionType, function_ref):
+def read_key_from_input_file(dest_dict : dict, key_name : str, input_dict : dict, isListOfVals : bool, conversionType : type) -> bool:
+    """
+    Arguments
+    dest_dict      : destination dictionary (it can be layers, fault, or something else)
+    key_value      : string that contains the name of the variable
+    input_dict     : input dictionary
+    isListOfVals   : boolean that triggers the splitting of a comma-separated list of values between square brackets
+    conversionType : converts the read value(s) into floats or ints
+    Returns
+    boolean : it says if the key-value pair has been found, read and copied
+    """
     print (" reading key: " + key_name)
     if key_name in input_dict.keys():
         if not isListOfVals:
@@ -317,11 +327,10 @@ def read_key_from_input_file(dest_dict, key_name, input_dict, isListOfVals, conv
             else:
                 values_arr = [x.strip() for x in input_dict[key_name].strip('[]').split(',')]
                 dest_dict[key_name] = np.array(values_arr, dtype=conversionType)
-            
+        return True
     else:
         print ('   key '+ key_name+' :  not found')
-        if function_ref != None:
-            function_ref()
+        return False
     
 
 
@@ -344,30 +353,32 @@ def read_input_data(fileini, code):
             line = fp.readline()
     ### example of usage of the previously defined function
 
-    def read_vp_vs_thk_etc():
-        read_key_from_input_file(layers,'vp',input,True,float,None)
-        read_key_from_input_file(layers,'vs',input,True,float,None)
-        read_key_from_input_file(layers,'thk',input,True,float,None)
-        read_key_from_input_file(layers,'rho',input,True,float,None)
-        read_key_from_input_file(layers,'qs',input,True,float,None)
-        read_key_from_input_file(layers,'qp',input,True,float,None)
+
+
+    resultReadOp=read_key_from_input_file(layers,'vel_model',input,False,None)
+    if (not resultReadOp):
+        read_key_from_input_file(layers,'vp',input,True,float)
+        read_key_from_input_file(layers,'vs',input,True,float)
+        read_key_from_input_file(layers,'thk',input,True,float)
+        read_key_from_input_file(layers,'rho',input,True,float)
+        read_key_from_input_file(layers,'qs',input,True,float)
+        read_key_from_input_file(layers,'qp',input,True,float)
         if 'hisada' in code:
-            read_key_from_input_file(layers,'fqs',input,True,float,None)
-            read_key_from_input_file(layers,'fqp',input,True,float,None)
+            read_key_from_input_file(layers,'fqs',input,True,float)
+            read_key_from_input_file(layers,'fqp',input,True,float)
 
         pass
 
-    read_key_from_input_file(layers,'vel_model',input,False,None,read_vp_vs_thk_etc)
 
-    read_key_from_input_file(fault,'fault_geolocation',input,False,None,None)
-    read_key_from_input_file(fault,'fault_type',input,False,None,None)
+    read_key_from_input_file(fault,'fault_geolocation',input,False,None)
+    read_key_from_input_file(fault,'fault_type',input,False,None)
     if fault['fault_geolocation'] == 'from_hypo' or fault['fault_type'] == 'point' or fault['fault_geolocation'] == 'from_hypo_geometry':
-        read_key_from_input_file(fault,'lon_hypo',input,False,float,None)
-        read_key_from_input_file(fault,'lat_hypo',input,False,float,None)
-        read_key_from_input_file(fault,'depth_hypo',input,False,float,None)
+        read_key_from_input_file(fault,'lon_hypo',input,False,float)
+        read_key_from_input_file(fault,'lat_hypo',input,False,float)
+        read_key_from_input_file(fault,'depth_hypo',input,False,float)
         fault['hypo'] = create_point(fault['lon_hypo'], fault['lat_hypo'], fault['depth_hypo'])  # in degrees and depth in km
 
-        read_key_from_input_file(fault,'Ztor',input,False,float,None)
+        read_key_from_input_file(fault,'Ztor',input,False,float)
 
     ### this portion of code is simplified by the upper functions
     ### this is the older portion of code
