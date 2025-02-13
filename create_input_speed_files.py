@@ -1,5 +1,11 @@
 from scipy.interpolate import RectBivariateSpline, bisplrep
 
+def nearest_power_of_3(x):
+    import numpy as np
+    """Arrotonda x alla potenza di 3 più vicina e restituisce l'esponente."""
+    exp = round(np.log(x) / np.log(3))  # Trova l'esponente più vicino
+    return 3 ** exp, exp  # Restituisce la potenza di 3 e l'esponente
+
 
 def redefine_layers(layers_orig, fault, computational_param, topo):
     import numpy as np
@@ -9,6 +15,7 @@ def redefine_layers(layers_orig, fault, computational_param, topo):
 
     depth_max_layers = fault['Ztor'] + fault['width'] * np.sin(np.radians(fault['dip'])) + \
                        computational_param['abso_bound_dist_km']
+
 
     vp_newlayers = []
     vs_newlayers = []
@@ -27,12 +34,13 @@ def redefine_layers(layers_orig, fault, computational_param, topo):
             qs_newlayers.append(layers_orig['qs'][ipt])
             thk_newlayers.append(layers_orig['thk'][ipt])
     if depth_max_layers < h[index + 1]:
-        vp_newlayers.append(layers_orig['vp'][index + 1])
-        vs_newlayers.append(layers_orig['vs'][index + 1])
-        rho_newlayers.append(layers_orig['rho'][index + 1])
-        qp_newlayers.append(layers_orig['qp'][index + 1])
-        qs_newlayers.append(layers_orig['qs'][index + 1])
-        thk_newlayers.append(depth_max_layers - h[index])
+        if depth_max_layers - h[index] > 1000: #deve essere maggiore di 1 km altrimenti non lo considera
+            vp_newlayers.append(layers_orig['vp'][index + 1])
+            vs_newlayers.append(layers_orig['vs'][index + 1])
+            rho_newlayers.append(layers_orig['rho'][index + 1])
+            qp_newlayers.append(layers_orig['qp'][index + 1])
+            qs_newlayers.append(layers_orig['qs'][index + 1])
+            thk_newlayers.append(depth_max_layers - h[index])
 
     layers_new['vp'] = np.asarray(vp_newlayers)
     layers_new['vs'] = np.asarray(vs_newlayers)
@@ -1253,7 +1261,12 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     mesh_size_from_vel = mesh_size_from_vel/1000.
     if topo == 'yes':
         resolution_topo = 0.325  # m corrispondenti a 15 arcsec alle nostre latitudini
-        mesh_size = min(mesh_size_from_vel, resolution_topo)
+        if mesh_size_from_vel/3. > resolution_topo:
+            mesh_size = resolution_topo * 3
+            need_refinement = 1
+        else:
+            mesh_size = min(mesh_size_from_vel, resolution_topo)
+            need_refinement = 0
     else:
         mesh_size = mesh_size_from_vel
     print('mesh_size= ', mesh_size)
@@ -1288,10 +1301,12 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
 
     command_cub_mesh_before_refinement = 'save as "' + folder_mesh + '/Mesh_before_refinement.cub" overwrite'
     fid.write('{}\n'.format(command_cub_mesh_before_refinement))
-    # if topo == 'yes':
-    #    fid.write('{}\n'.format('refine surface 2 numsplit 1 bias 1.0 depth 3'))
-    fid.write('{}\n'.format('#*************************************'))
-    fid.write('{}\n'.format(''))
+    if topo == 'yes':
+        if need_refinement == 1:
+            refine_command = 'refine surface 2 numsplit 1 bias 1.0 depth 1' #suddivide il lato in 3 con numsplit 1
+        fid.write('{}\n'.format(refine_command))
+        fid.write('{}\n'.format('#*************************************'))
+        fid.write('{}\n'.format(''))
     fid.write('{}\n'.format('# Exporting'))
     for i in range(nlayers):
         num1 = i + 1

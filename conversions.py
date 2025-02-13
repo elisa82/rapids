@@ -746,6 +746,7 @@ def convert_mesh(fileName, type_conv, folder):
                 fid.write('%i    %i  %i  %i    %i\n' % (ctria_id[i], ctria_1[i], ctria_2[i], ctria_3[i], ctria_tag[i]))
 
     fid.close()
+    print('\n\t MeshFile generated \n')
     return
 
 
