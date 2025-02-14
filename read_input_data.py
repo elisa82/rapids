@@ -1,3 +1,4 @@
+import numpy as np
 def read_folder(fileini):
     input = {}
     with open(fileini) as fp:
@@ -293,10 +294,48 @@ def create_plot_param():
     }
     return plot_param
 
+### this function read a parameter from the 'input dictionary'
+### the read parameter is identified by key_name and stored into dest_dict using the same key
+### optionally, a list of values can be split and also converted
+### optionally, if the parameter is missing, another set of parameters can be loaded, through the reference to a further function (the last parameter)
+### V. Sciortino
+def read_key_from_input_file(dest_dict : dict, key_name : str, input_dict : dict, isListOfVals : bool, conversionType : type) -> bool:
+    """
+    Arguments
+    dest_dict      : destination dictionary (it can be layers, fault, or something else)
+    key_value      : string that contains the name of the variable
+    input_dict     : input dictionary
+    isListOfVals   : boolean that triggers the splitting of a comma-separated list of values between square brackets
+    conversionType : converts the read value(s) into floats or ints
+    Returns
+    boolean : it says if the key-value pair has been found, read and copied
+    """
+    print (" reading key: " + key_name)
+    if key_name in input_dict.keys():
+        if not isListOfVals:
+            # read a single value variable
+            if conversionType == None:
+                dest_dict[key_name] = input_dict[key_name]
+            else:
+                value = input_dict[key_name]
+                dest_dict[key_name] = conversionType(value)
+
+        else:
+            # read a list of comma separated values, then strip them; leave conversion to float or int outside of this function
+            if conversionType == None:
+                dest_dict[key_name] = [x.strip() for x in input_dict[key_name].strip('[]').split(',')]
+            else:
+                values_arr = [x.strip() for x in input_dict[key_name].strip('[]').split(',')]
+                dest_dict[key_name] = np.array(values_arr, dtype=conversionType)
+        return True
+    else:
+        print ('   key '+ key_name+' :  not found')
+        return False
+    
+
 
 def read_input_data(fileini, code):
     import sys
-    import numpy as np
     from shapely.geometry import Point
     from rapids.conversions import determine_utm_coord, create_point, create_vertex
     import math
@@ -312,7 +351,43 @@ def read_input_data(fileini, code):
                 key, value = line.strip().split('=', 1)
                 input[key.strip()] = value.strip()
             line = fp.readline()
+    ### example of usage of the previously defined function
 
+
+
+    resultReadOp=read_key_from_input_file(layers,'vel_model',input,False,None)
+    if (not resultReadOp):
+        read_key_from_input_file(layers,'vp',input,True,float)
+        read_key_from_input_file(layers,'vs',input,True,float)
+        read_key_from_input_file(layers,'thk',input,True,float)
+        read_key_from_input_file(layers,'rho',input,True,float)
+        read_key_from_input_file(layers,'qs',input,True,float)
+        read_key_from_input_file(layers,'qp',input,True,float)
+        if 'hisada' in code:
+            read_key_from_input_file(layers,'fqs',input,True,float)
+            read_key_from_input_file(layers,'fqp',input,True,float)
+
+        pass
+
+
+    read_key_from_input_file(fault,'fault_geolocation',input,False,None)
+    read_key_from_input_file(fault,'fault_type',input,False,None)
+    if fault['fault_geolocation'] == 'from_hypo' or fault['fault_type'] == 'point' or fault['fault_geolocation'] == 'from_hypo_geometry':
+        read_key_from_input_file(fault,'lon_hypo',input,False,float)
+        read_key_from_input_file(fault,'lat_hypo',input,False,float)
+        read_key_from_input_file(fault,'depth_hypo',input,False,float)
+        fault['hypo'] = create_point(fault['lon_hypo'], fault['lat_hypo'], fault['depth_hypo'])  # in degrees and depth in km
+
+        read_key_from_input_file(fault,'Ztor',input,False,float)
+
+    ### this portion of code is simplified by the upper functions
+    ### this is the older portion of code
+    key_name='vel_model'
+    if key_name in input.keys():
+        layers['vel_model'] = input[key_name]
+    else:
+        alert_message='key not found'
+        print(alert_message)
     try:
         layers['vel_model'] = input['vel_model']
     except KeyError:
@@ -361,6 +436,7 @@ def read_input_data(fileini, code):
             fault['Ztor'] = float(input['Ztor'])
         except KeyError:
             pass
+    ### end of the simplified portion of code
 
     if fault['fault_geolocation'] == 'from_geometry' or \
             fault['fault_geolocation'] == 'from_hypo_geometry':
