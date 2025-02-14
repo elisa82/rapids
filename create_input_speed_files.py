@@ -1303,7 +1303,7 @@ def create_mesh(folder, computational_param, layers, fault, sites, topo, path_cu
     fid.write('{}\n'.format(command_cub_mesh_before_refinement))
     if topo == 'yes':
         if need_refinement == 1:
-            refine_command = 'refine surface 2 numsplit 1 bias 1.0 depth 1' #suddivide il lato in 3 con numsplit 1
+            refine_command = 'refine surface 2 numsplit 1 bias 1.0 depth 2' #suddivide il lato in 3 con numsplit 1
         fid.write('{}\n'.format(refine_command))
         fid.write('{}\n'.format('#*************************************'))
         fid.write('{}\n'.format(''))
